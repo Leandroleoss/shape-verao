@@ -21,7 +21,7 @@
                 <h1 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
                     <i class="fa-solid fa-fire-flame-curved animate-pulse"></i> ShapeVerão Pro
                 </h1>
-                <p class="text-xs text-gray-400">Meta Absoluta: Definição Muscular</p>
+                <p class="text-xs text-gray-400">Rastreador de Treino & Dieta Inteligente</p>
             </div>
             <div id="timer-display" class="hidden bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-xs font-bold border border-amber-500/30 items-center gap-2">
                 <i class="fa-solid fa-stopwatch"></i> Descanso: <span id="timer-count">60</span>s
@@ -33,14 +33,20 @@
 
         <div id="tab-dieta" class="tab-content active space-y-6">
             <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl">
-                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-emerald-400"></i> Alvo de Macronutrientes Diários
-                </h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-emerald-400"></i> Alvo de Macros Diários
+                    </h2>
+                    <button onclick="abrirModalMetas()" class="text-gray-400 hover:text-emerald-400 text-sm transition flex items-center gap-1 bg-gray-800 px-2.5 py-1 rounded-xl border border-gray-700">
+                        <i class="fa-solid fa-calculator"></i> Ajustar Meta
+                    </button>
+                </div>
+                
                 <div class="space-y-4">
                     <div>
                         <div class="flex justify-between text-sm mb-1">
-                            <span class="text-gray-300 font-medium">💪 Proteínas (Músculos)</span>
-                            <span class="text-xs text-gray-400"><strong id="p-atual" class="text-emerald-400">0</strong> / 145g</span>
+                            <span class="text-gray-300 font-medium">💪 Proteínas</span>
+                            <span class="text-xs text-gray-400"><strong id="p-atual" class="text-emerald-400">0</strong> / <span id="p-meta-display">145</span>g</span>
                         </div>
                         <div class="w-full bg-gray-800 h-2.5 rounded-full overflow-hidden">
                             <div id="p-bar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
@@ -48,8 +54,8 @@
                     </div>
                     <div>
                         <div class="flex justify-between text-sm mb-1">
-                            <span class="text-gray-300 font-medium">⚡ Carboidratos (Energia)</span>
-                            <span class="text-xs text-gray-400"><strong id="c-atual" class="text-amber-400">0</strong> / 195g</span>
+                            <span class="text-gray-300 font-medium">⚡ Carboidratos</span>
+                            <span class="text-xs text-gray-400"><strong id="c-atual" class="text-amber-400">0</strong> / <span id="c-meta-display">195</span>g</span>
                         </div>
                         <div class="w-full bg-gray-800 h-2.5 rounded-full overflow-hidden">
                             <div id="c-bar" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
@@ -57,8 +63,8 @@
                     </div>
                     <div>
                         <div class="flex justify-between text-sm mb-1">
-                            <span class="text-gray-300 font-medium">🥑 Gorduras (Hormônios)</span>
-                            <span class="text-xs text-gray-400"><strong id="g-atual" class="text-blue-400">0</strong> / 65g</span>
+                            <span class="text-gray-300 font-medium">🥑 Gorduras</span>
+                            <span class="text-xs text-gray-400"><strong id="g-atual" class="text-blue-400">0</strong> / <span id="g-meta-display">65</span>g</span>
                         </div>
                         <div class="w-full bg-gray-800 h-2.5 rounded-full overflow-hidden">
                             <div id="g-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
@@ -126,6 +132,63 @@
             </div>
         </div>
 
+        <div id="modal-metas" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div class="bg-[#1a1a1e] w-full max-w-sm rounded-2xl border border-gray-800 p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-200">Configurar Alvo Diário</h3>
+                        <p class="text-[10px] text-gray-400">Calcule automaticamente ou digite manualmente</p>
+                    </div>
+                    <button onclick="fecharModalMetas()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="flex bg-gray-900 p-1 rounded-xl text-xs">
+                    <button id="btn-modo-auto" onclick="mudarModoMetas('auto')" class="w-1/2 py-1.5 rounded-lg text-center font-bold bg-emerald-600 text-white transition">🔮 Auto (Fácil)</button>
+                    <button id="btn-modo-manual" onclick="mudarModoMetas('manual')" class="w-1/2 py-1.5 rounded-lg text-center font-bold text-gray-400 hover:text-white transition">⚙️ Manual</button>
+                </div>
+
+                <div id="form-meta-auto" class="space-y-3 text-xs">
+                    <div>
+                        <label class="text-gray-400 block mb-1">Seu Peso Atual (kg):</label>
+                        <input type="number" id="auto-peso-input" placeholder="Ex: 75" oninput="calcularMacrosAutomaticos()" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-sm font-bold text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-gray-400 block mb-1">Qual o seu Objetivo Principal?</label>
+                        <select id="auto-objetivo-select" onchange="calcularMacrosAutomaticos()" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-medium text-gray-200 focus:outline-none">
+                            <option value="emagrecer">🔥 Emagrecer / Definição Muscular</option>
+                            <option value="ganhar">💪 Ganhar Massa / Hipertrofia</option>
+                            <option value="manter">🍏 Manter Peso / Vida Saudável</option>
+                        </select>
+                    </div>
+                    <div class="bg-gray-900/60 p-3 rounded-xl border border-gray-800 space-y-1.5 text-[11px]">
+                        <span class="text-gray-400 block font-medium">Metas calculadas para você:</span>
+                        <div class="flex justify-between">
+                            <span class="text-emerald-400 font-bold">💪 Proteínas: <span id="preview-p">0</span>g</span>
+                            <span class="text-amber-400 font-bold">⚡ Carbos: <span id="preview-c">0</span>g</span>
+                            <span class="text-blue-400 font-bold">🥑 Gorduras: <span id="preview-g">0</span>g</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="form-meta-manual" class="hidden space-y-3 text-xs">
+                    <div>
+                        <label class="text-emerald-400 font-bold block mb-1">Meta de Proteínas (g):</label>
+                        <input type="number" id="meta-p-input" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-amber-400 font-bold block mb-1">Meta de Carboidratos (g):</label>
+                        <input type="number" id="meta-c-input" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-blue-400 font-bold block mb-1">Meta de Gorduras (g):</label>
+                        <input type="number" id="meta-g-input" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:outline-none">
+                    </div>
+                </div>
+
+                <button onclick="salvarMetasFinais()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl transition shadow-lg">Aplicar Alvo de Dieta</button>
+            </div>
+        </div>
+
         <div id="tab-treino" class="tab-content space-y-6">
             <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl space-y-4">
                 <div class="flex justify-between items-center">
@@ -187,11 +250,11 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="text-[10px] text-gray-400 block mb-1">Peso (kg):</label>
-                            <input type="number" step="0.1" id="novo-peso" placeholder="Ex: 75.2" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-sm text-center text-white focus:outline-none focus:border-emerald-500">
+                            <input type="number" step="0.1" id="novo-peso" placeholder="Ex: 75.2" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-sm text-center text-white focus:outline-none">
                         </div>
                         <div>
                             <label class="text-[10px] text-gray-400 block mb-1">Data do Registro:</label>
-                            <input type="date" id="data-peso" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-sm text-center text-white focus:outline-none focus:border-emerald-500">
+                            <input type="date" id="data-peso" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-sm text-center text-white focus:outline-none">
                         </div>
                     </div>
                     <button onclick="adicionarPeso()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl text-xs font-bold transition shadow-lg flex items-center justify-center gap-1">
@@ -230,7 +293,11 @@
     </nav>
 
     <script>
-        // DATA DIETA E PARAMS FIXOS
+        // METAS PADRÃO AJUSTÁVEIS
+        let metasMacros = JSON.parse(localStorage.getItem('shape_metas_macros')) || { p: 145, c: 195, g: 65 };
+        let modoMetasAtual = "auto"; // auto ou manual
+
+        // BANCO BASE E CONFIG REFEIÇÕES
         const bancoBaseFixo = {
             frango: { nome: "Peito de Frango Grelhado", p: 31, c: 0, g: 2.5 },
             patinho: { nome: "Patinho Moído Cozido", p: 35.9, c: 0, g: 7.3 },
@@ -247,9 +314,94 @@
             refeicoes: [
                 { id: "ref_1", nome: "Café da Manhã", alimentos: [] },
                 { id: "ref_2", nome: "Almoço", alimentos: [] },
-                { id: "ref_3", nome: "Lanche Tarde", alimentos: [] }
+                { id: "ref_3", nome: "Lanche da Tarde", alimentos: [] }
             ]
         };
+
+        // CONTROLE MODAL METAS INTELLIGENT
+        function abrirModalMetas() {
+            // Se já existirem pesos salvos, tenta preencher o peso da calculadora automaticamente com o último peso registrado
+            let historicoPesos = JSON.parse(localStorage.getItem('shape_peso_objects_v1')) || [];
+            if(historicoPesos.length > 0 && !document.getElementById('auto-peso-input').value) {
+                document.getElementById('auto-peso-input').value = historicoPesos[historicoPesos.length - 1].peso;
+            }
+            
+            document.getElementById('meta-p-input').value = metasMacros.p;
+            document.getElementById('meta-c-input').value = metasMacros.c;
+            document.getElementById('meta-g-input').value = metasMacros.g;
+            
+            calcularMacrosAutomaticos();
+            document.getElementById('modal-metas').classList.remove('hidden');
+        }
+        function fecharModalMetas() { document.getElementById('modal-metas').classList.add('hidden'); }
+        
+        function mudarModoMetas(modo) {
+            modoMetasAtual = modo;
+            const btnAuto = document.getElementById('btn-modo-auto');
+            const btnManual = document.getElementById('btn-modo-manual');
+            const formAuto = document.getElementById('form-meta-auto');
+            const formManual = document.getElementById('form-meta-manual');
+
+            if(modo === 'auto') {
+                btnAuto.className = "w-1/2 py-1.5 rounded-lg text-center font-bold bg-emerald-600 text-white transition";
+                btnManual.className = "w-1/2 py-1.5 rounded-lg text-center font-bold text-gray-400 hover:text-white transition";
+                formAuto.classList.remove('hidden'); formManual.classList.add('hidden');
+            } else {
+                btnManual.className = "w-1/2 py-1.5 rounded-lg text-center font-bold bg-emerald-600 text-white transition";
+                btnAuto.className = "w-1/2 py-1.5 rounded-lg text-center font-bold text-gray-400 hover:text-white transition";
+                formManual.classList.remove('hidden'); formAuto.classList.add('hidden');
+            }
+        }
+
+        function calcularMacrosAutomaticos() {
+            const peso = parseFloat(document.getElementById('auto-peso-input').value) || 0;
+            const objetivo = document.getElementById('auto-objetivo-select').value;
+            
+            let p = 0, c = 0, g = 0;
+
+            if(peso > 0) {
+                if(objetivo === 'emagrecer') {
+                    p = Math.round(peso * 2.0);
+                    g = Math.round(peso * 0.8);
+                    c = Math.round(peso * 2.0);
+                } else if(objetivo === 'ganhar') {
+                    p = Math.round(peso * 2.0);
+                    g = Math.round(peso * 1.0);
+                    c = Math.round(peso * 4.0);
+                } else { // manter
+                    p = Math.round(peso * 1.6);
+                    g = Math.round(peso * 0.9);
+                    c = Math.round(peso * 3.0);
+                }
+            }
+
+            document.getElementById('preview-p').innerText = p;
+            document.getElementById('preview-c').innerText = c;
+            document.getElementById('preview-g').innerText = g;
+        }
+
+        function salvarMetasFinais() {
+            let p = 145, c = 195, g = 65;
+
+            if(modoMetasAtual === 'auto') {
+                const previewP = parseInt(document.getElementById('preview-p').innerText);
+                const previewC = parseInt(document.getElementById('preview-c').innerText);
+                const previewG = parseInt(document.getElementById('preview-g').innerText);
+                
+                if(previewP <= 0) return alert("Por favor, digite o seu peso para fazer o cálculo!");
+                p = previewP; c = previewC; g = previewG;
+            } else {
+                p = parseInt(document.getElementById('meta-p-input').value) || 145;
+                c = parseInt(document.getElementById('meta-c-input').value) || 195;
+                g = parseInt(document.getElementById('meta-g-input').value) || 65;
+            }
+
+            metasMacros = { p, c, g };
+            localStorage.setItem('shape_metas_macros', JSON.stringify(metasMacros));
+            fecharModalMetas();
+            salvarERenderizarTudo();
+        }
+
         function renderizarListaAlimentosSelect() {
             const select = document.getElementById('alimento-banco'); select.innerHTML = '<option value="">-- Selecione do seu Banco --</option>';
             const todos = { ...bancoBaseFixo, ...bancoCustomizado };
@@ -280,10 +432,16 @@
         function salvarNovoAlimentoNoBanco() {
             const nome = document.getElementById('novo-nome').value.trim(); const p = parseFloat(document.getElementById('novo-p').value) || 0; const c = parseFloat(document.getElementById('novo-c').value) || 0; const g = parseFloat(document.getElementById('novo-g').value) || 0;
             if(!nome) return alert("Digite o nome!"); bancoCustomizado['custom_' + Date.now()] = { nome: nome, p: p, c: c, g: g }; localStorage.setItem('shape_banco_custom', JSON.stringify(bancoCustomizado));
-            document.getElementById('novo-nome').value = ''; document.getElementById('novo-p').value = ''; document.getElementById('novo-c').value = ''; document.getElementById('novo-g').value = ''; alert("Salvo!");
+            document.getElementById('novo-nome').value = ''; document.getElementById('novo-p').value = ''; document.getElementById('novo-c').value = ''; document.getElementById('novo-g').value = ''; alert("Alimento adicionado ao banco geral!");
         }
         function salvarERenderizarTudo() {
             localStorage.setItem('shape_dieta_flex_v1', JSON.stringify(estruturaDieta)); let totalP = 0, totalC = 0, totalG = 0; const container = document.getElementById('container-refeicoes'); container.innerHTML = "";
+            
+            // Updates target values on UI
+            document.getElementById('p-meta-display').innerText = metasMacros.p;
+            document.getElementById('c-meta-display').innerText = metasMacros.c;
+            document.getElementById('g-meta-display').innerText = metasMacros.g;
+
             estruturaDieta.refeicoes.forEach(ref => {
                 let refP = 0, refC = 0, refG = 0; let alimentosHTML = "";
                 ref.alimentos.forEach(alim => {
@@ -291,10 +449,11 @@
                     alimentosHTML += `<div class="flex justify-between items-center bg-gray-900/60 p-2 rounded-lg border border-gray-800/60 text-[11px] mt-1.5"><span class="text-gray-300 font-medium">${alim.nome}</span><div class="flex items-center gap-2"><span class="text-emerald-400">${Math.round(alim.p)}g P</span> | <span class="text-amber-400">${Math.round(alim.c)}g C</span> | <span class="text-blue-400">${Math.round(alim.g)}g G</span><button onclick="removerAlimento('${ref.id}', '${alim.id_alim}')" class="text-red-400 ml-1"><i class="fa-solid fa-trash"></i></button></div></div>`;
                 });
                 totalP += refP; totalC += refC; totalG += refG;
-                container.innerHTML += `<div class="bg-[#1a1a1e] p-4 rounded-2xl border border-gray-800 shadow-lg space-y-3"><div class="flex justify-between items-center border-b border-gray-800/80 pb-2"><div><h4 class="text-sm font-bold text-gray-200">🍴 ${ref.nome}</h4><div class="text-[10px] text-gray-400 mt-0.5"><span class="text-emerald-400">${Math.round(refP)}g P</span> | <span class="text-amber-400">${Math.round(refC)}g C</span> | <span class="text-blue-400">${Math.round(refG)}g G</span></div></div><div class="flex items-center gap-1"><button onclick="abrirModalAlimento('${ref.id}', '${ref.nome}')" class="bg-gray-800 text-emerald-400 border border-gray-700 text-[11px] font-bold py-1 px-2.5 rounded-lg">+ Add</button><button onclick="excluirRefeicao('${ref.id}')" class="text-gray-500 hover:text-red-400 p-1 text-xs"><i class="fa-solid fa-trash-can"></i></button></div></div><div>${ref.alimentos.length === 0 ? '<p class="text-gray-500 text-[11px] italic py-1">Nenhum alimento.</p>' : alimentosHTML}</div></div>`;
+                container.innerHTML += `<div class="bg-[#1a1a1e] p-4 rounded-2xl border border-gray-800 shadow-lg space-y-3"><div class="flex justify-between items-center border-b border-gray-800/80 pb-2"><div><h4 class="text-sm font-bold text-gray-200">🍴 ${ref.nome}</h4><div class="text-[10px] text-gray-400 mt-0.5"><span class="text-emerald-400">${Math.round(refP)}g P</span> | <span class="text-amber-400">${Math.round(refC)}g C</span> | <span class="text-blue-400">${Math.round(refG)}g G</span></div></div><div class="flex items-center gap-1"><button onclick="abrirModalAlimento('${ref.id}', '${ref.nome}')" class="bg-gray-800 text-emerald-400 border border-gray-700 text-[11px] font-bold py-1 px-2.5 rounded-lg">+ Add</button><button onclick="excluirRefeicao('${ref.id}')" class="text-gray-500 hover:text-red-400 p-1 text-xs"><i class="fa-solid fa-trash-can"></i></button></div></div><div>${ref.alimentos.length === 0 ? '<p class="text-gray-500 text-[11px] italic py-1">Nenhuma alimento registrado.</p>' : alimentosHTML}</div></div>`;
             });
+            
             document.getElementById('p-atual').innerText = Math.round(totalP); document.getElementById('c-atual').innerText = Math.round(totalC); document.getElementById('g-atual').innerText = Math.round(totalG);
-            document.getElementById('p-bar').style.width = `${Math.min((totalP / 145) * 100, 100)}%`; document.getElementById('c-bar').style.width = `${Math.min((totalC / 195) * 100, 100)}%`; document.getElementById('g-bar').style.width = `${Math.min((totalG / 65) * 100, 100)}%`;
+            document.getElementById('p-bar').style.width = `${Math.min((totalP / metasMacros.p) * 100, 100)}%`; document.getElementById('c-bar').style.width = `${Math.min((totalC / metasMacros.c) * 100, 100)}%`; document.getElementById('g-bar').style.width = `${Math.min((totalG / metasMacros.g) * 100, 100)}%`;
         }
 
         // ================= SISTEMA DE FICHAS DE TREINOS EDITÁVEIS =================
@@ -357,7 +516,7 @@
             let total = databaseTreinos[tipo].length; let concluidos = 0;
             databaseTreinos[tipo].forEach(ex => { const btn = document.getElementById(`btn-check-${ex.id}`); if (btn && btn.classList.contains('bg-emerald-600')) concluidos++; });
             const agora = new Date(); historicoTreinosLog.unshift({ id: Date.now(), tipo: "🏋️ Musculação " + tipo, data: agora.toLocaleDateString('pt-BR'), hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}), duracao: duration, calorias: Math.round(duration * 7.5), detalhe: `Feitos: ${concluidos}/${total}` });
-            localStorage.setItem('shape_diario_treinos', JSON.stringify(historicoTreinosLog)); alert(`Ficha ${tipo} salva!`); mudarTreino(); renderizarDiarioTreinos();
+            localStorage.setItem('shape_diario_treinos', JSON.stringify(historicoTreinosLog)); alert(`Ficha ${tipo} salva com sucesso!`); mudarTreino(); renderizarDiarioTreinos();
         }
         function salvarCardioAvulso() {
             const at = document.getElementById('cardio-atividade').value.trim(); const du = parseInt(document.getElementById('cardio-duracao').value) || 0; const ca = parseInt(document.getElementById('cardio-calorias').value) || 0;
@@ -367,7 +526,7 @@
             alert("Cárdio salvo!"); renderizarDiarioTreinos();
         }
         function renderizarDiarioTreinos() {
-            const container = document.getElementById('historico-treinos'); if (historicoTreinosLog.length === 0) { container.innerHTML = '<p class="text-gray-500 text-center py-4 italic">Nenhum registro ainda.</p>'; return; }
+            const container = document.getElementById('historico-treinos'); if (historicoTreinosLog.length === 0) { container.innerHTML = '<p class="text-gray-500 text-center py-4 italic">Nenhum registro no diário ainda.</p>'; return; }
             container.innerHTML = ''; historicoTreinosLog.forEach(log => {
                 const isC = log.tipo.includes('🏃');
                 container.innerHTML += `<div class="bg-gray-900 p-3 rounded-xl border ${isC ? 'border-amber-600/30':'border-gray-800'} flex justify-between items-center"><div><span class="font-bold ${isC ? 'text-amber-400':'text-emerald-400'} block">${log.tipo}</span><span class="text-[10px] text-gray-400"><i class="fa-regular fa-calendar"></i> ${log.data} às ${log.hora}</span></div><div class="text-right"><span class="text-red-400 font-bold block">-${log.calorias} kcal</span><span class="text-[10px] text-gray-400">${log.duracao} min | ${log.detalhe}</span></div><button onclick="removerItemDiario(${log.id})" class="text-gray-600 hover:text-red-400 ml-2 text-[10px] self-start pt-0.5"><i class="fa-solid fa-xmark"></i></button></div>`;
@@ -375,8 +534,8 @@
         }
         function removerItemDiario(id) { if (confirm("Remover do diário?")) { historicoTreinosLog = historicoTreinosLog.filter(l => l.id !== id); localStorage.setItem('shape_diario_treinos', JSON.stringify(historicoTreinosLog)); renderizarDiarioTreinos(); } }
 
-        // ================= ABA 3: EVOLUÇÃO (PESO UNIVERSAL E LIMPO) =================
-        let historicoPesoObjetos = JSON.parse(localStorage.getItem('shape_peso_objetos_v1')) || [];
+        // ================= ABA 3: EVOLUÇÃO =================
+        let historicoPesoObjetos = JSON.parse(localStorage.getItem('shape_peso_objects_v1')) || [];
         let graficoInstancia = null;
 
         function definirDataAtualInput() {
@@ -393,45 +552,30 @@
             if (!peso || peso <= 0) return alert("Por favor, digite um peso válido!");
             if (!data) return alert("Por favor, selecione uma data válida!");
 
-            const novoRegistro = {
-                id: Date.now(),
-                peso: peso,
-                data: data
-            };
-
+            const novoRegistro = { id: Date.now(), peso: peso, data: data };
             historicoPesoObjetos.push(novoRegistro);
             historicoPesoObjetos.sort((a, b) => new Date(a.data) - new Date(b.data));
-
-            localStorage.setItem('shape_peso_objetos_v1', JSON.stringify(historicoPesoObjetos));
+            localStorage.setItem('shape_peso_objects_v1', JSON.stringify(historicoPesoObjetos));
             
             inputPeso.value = '';
             definirDataAtualInput();
-            
             renderizarGrafico();
             renderizarHistoricoGerenciávelPesos();
         }
 
         function editarRegistroPeso(id) {
-            const registro = historicoPesoObjetos.find(p => p.id === id);
-            if (!registro) return;
+            const registro = historicoPesoObjetos.find(p => p.id === id); if (!registro) return;
+            const [ano, mes, dia] = registro.data.split('-'); const dataLegivelAntiga = `${dia}/${mes}/${ano}`;
 
-            const [ano, mes, dia] = registro.data.split('-');
-            const dataLegivelAntiga = `${dia}/${mes}/${ano}`;
+            const novoPesoPrompt = prompt(`Editar Peso (kg) para ${dataLegivelAntiga}:`, registro.peso); if (novoPesoPrompt === null) return;
+            const novoPeso = parseFloat(novoPesoPrompt); if (!novoPeso || novoPeso <= 0) return alert("Peso inválido!");
 
-            const novoPesoPrompt = prompt(`Editar Peso (kg) para o registro de ${dataLegivelAntiga}:`, registro.peso);
-            if (novoPesoPrompt === null) return;
-            const novoPeso = parseFloat(novoPesoPrompt);
-            if (!novoPeso || novoPeso <= 0) return alert("Peso inválido!");
+            const novaDataPrompt = prompt(`Editar Data (AAAA-MM-DD):`, registro.data); if (novaDataPrompt === null) return;
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(novaDataPrompt)) return alert("Data inválida! Use AAAA-MM-DD.");
 
-            const novaDataPrompt = prompt(`Editar Data (use o formato AAAA-MM-DD):`, registro.data);
-            if (novaDataPrompt === null) return;
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(novaDataPrompt)) return alert("Formato de data inválido! Use AAAA-MM-DD.");
-
-            registro.peso = novoPeso;
-            registro.data = novaDataPrompt;
-
+            registro.peso = novoPeso; registro.data = novaDataPrompt;
             historicoPesoObjetos.sort((a, b) => new Date(a.data) - new Date(b.data));
-            localStorage.setItem('shape_peso_objetos_v1', JSON.stringify(historicoPesoObjetos));
+            localStorage.setItem('shape_peso_objects_v1', JSON.stringify(historicoPesoObjetos));
 
             renderizarGrafico();
             renderizarHistoricoGerenciávelPesos();
@@ -440,20 +584,15 @@
         function deletarRegistroPeso(id) {
             if (confirm("Deseja realmente excluir permanentemente este registro de peso?")) {
                 historicoPesoObjetos = historicoPesoObjetos.filter(p => p.id !== id);
-                localStorage.setItem('shape_peso_objetos_v1', JSON.stringify(historicoPesoObjetos));
+                localStorage.setItem('shape_peso_objects_v1', JSON.stringify(historicoPesoObjetos));
                 renderizarGrafico();
                 renderizarHistoricoGerenciávelPesos();
             }
         }
 
         function renderizarHistoricoGerenciávelPesos() {
-            const container = document.getElementById('lista-pesos-historico');
-            container.innerHTML = '';
-
-            if (historicoPesoObjetos.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-4 italic">Nenhum peso registrado ainda. Use o campo acima!</p>';
-                return;
-            }
+            const container = document.getElementById('lista-pesos-historico'); container.innerHTML = '';
+            if (historicoPesoObjetos.length === 0) { container.innerHTML = '<p class="text-gray-500 text-center py-4 italic">Nenhum peso registrado ainda.</p>'; return; }
 
             const exibicaoInvertida = [...historicoPesoObjetos].reverse();
             exibicaoInvertida.forEach(reg => {
@@ -468,33 +607,20 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <button onclick="editarRegistroPeso(${reg.id})" class="text-gray-400 hover:text-amber-400 p-1 text-xs" title="Editar pesagem"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="deletarRegistroPeso(${reg.id})" class="text-gray-500 hover:text-red-400 p-1 text-xs" title="Excluir pesagem"><i class="fa-solid fa-trash-can"></i></button>
+                            <button onclick="editarRegistroPeso(${reg.id})" class="text-gray-400 hover:text-amber-400 p-1 text-xs"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deletarRegistroPeso(${reg.id})" class="text-gray-500 hover:text-red-400 p-1 text-xs"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
         function renderizarGrafico() {
-            const canvas = document.getElementById('graficoPeso');
-            const aviso = document.getElementById('aviso-grafico-vazio');
-            
-            if (historicoPesoObjetos.length === 0) {
-                canvas.classList.add('hidden');
-                aviso.classList.remove('hidden');
-                if (graficoInstancia) graficoInstancia.destroy();
-                return;
-            }
-
-            canvas.classList.remove('hidden');
-            aviso.classList.add('hidden');
+            const canvas = document.getElementById('graficoPeso'); const aviso = document.getElementById('aviso-grafico-vazio');
+            if (historicoPesoObjetos.length === 0) { canvas.classList.add('hidden'); aviso.classList.remove('hidden'); if (graficoInstancia) graficoInstancia.destroy(); return; }
+            canvas.classList.remove('hidden'); aviso.classList.add('hidden');
 
             const ctx = canvas.getContext('2d');
-            const labels = historicoPesoObjetos.map(reg => {
-                const [, mes, dia] = reg.data.split('-');
-                return `${dia}/${mes}`;
-            });
+            const labels = historicoPesoObjetos.map(reg => { const [, mes, dia] = reg.data.split('-'); return `${dia}/${mes}`; });
             const dadosPesos = historicoPesoObjetos.map(reg => reg.peso);
 
             if (graficoInstancia) graficoInstancia.destroy();
@@ -503,18 +629,11 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Peso (kg)',
-                        data: dadosPesos,
-                        borderColor: '#34d399',
-                        backgroundColor: 'rgba(52, 211, 153, 0.1)',
-                        tension: 0.2,
-                        borderWidth: 2,
-                        fill: true
+                        label: 'Peso (kg)', data: dadosPesos, borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.1)', tension: 0.2, borderWidth: 2, fill: true
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
                         y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
