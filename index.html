@@ -187,7 +187,7 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="text-[10px] text-gray-400 block mb-1">Peso (kg):</label>
-                            <input type="number" step="0.1" id="novo-peso" placeholder="Ex: 68.5" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-sm text-center text-white focus:outline-none focus:border-emerald-500">
+                            <input type="number" step="0.1" id="novo-peso" placeholder="Ex: 75.2" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-sm text-center text-white focus:outline-none focus:border-emerald-500">
                         </div>
                         <div>
                             <label class="text-[10px] text-gray-400 block mb-1">Data do Registro:</label>
@@ -199,7 +199,10 @@
                     </button>
                 </div>
 
-                <div class="w-full bg-gray-900 p-2 rounded-xl border border-gray-800"><canvas id="graficoPeso" class="w-full h-48"></canvas></div>
+                <div class="w-full bg-gray-900 p-2 rounded-xl border border-gray-800">
+                    <canvas id="graficoPeso" class="w-full h-48"></canvas>
+                    <p id="aviso-grafico-vazio" class="text-gray-500 text-center text-xs italic py-16 hidden">Adicione sua primeira pesagem para desenhar o gráfico!</p>
+                </div>
             </section>
 
             <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl space-y-3">
@@ -295,12 +298,12 @@
         }
 
         // ================= SISTEMA DE FICHAS DE TREINOS EDITÁVEIS =================
-        const defaultTreinos = {
-            A: [{ id: "A1", nome: "Supino Inclinado (Halteres)", series: "4x 8-10" }, { id: "A2", nome: "Supino Reto", series: "3x 10" }, { id: "A3", nome: "Desenvolvimento C/ Halteres", series: "3x 10" }, { id: "A4", nome: "Elevação Lateral", series: "4x 12-15" }, { id: "A5", nome: "Tríceps Pulley (Corda)", series: "4x 12" }],
-            B: [{ id: "B1", nome: "Puxada Alta (Pulley)", series: "4x 10" }, { id: "B2", nome: "Remada Baixa/Curvada", series: "4x 10" }, { id: "B3", nome: "Crucifixo Invertido", series: "3x 12" }, { id: "B4", nome: "Rosca Direta (Barra W)", series: "3x 10" }, { id: "B5", nome: "Rosca Martelo", series: "3x 12" }, { id: "B6", nome: "Abdominal Supra", series: "4x 15-20" }],
-            C: [{ id: "C1", nome: "Agachamento ou Leg 45°", series: "4x 8-10" }, { id: "C2", nome: "Cadeira Extensora", series: "3x 12" }, { id: "C3", nome: "Mesa ou Cadeira Flexora", series: "4x 10-12" }, { id: "C4", nome: "Stiff", series: "3x 10" }, { id: "C5", nome: "Gêmeos em Pé", series: "4x 15" }]
+        const treinosExemplo = {
+            A: [{ id: "ex_1", nome: "Exemplo: Supino Inclinado", series: "4x 10" }],
+            B: [{ id: "ex_2", nome: "Exemplo: Puxada Alta", series: "4x 10" }],
+            C: [{ id: "ex_3", nome: "Exemplo: Agachamento", series: "4x 10" }]
         };
-        let databaseTreinos = JSON.parse(localStorage.getItem('shape_fichas_treino')) || defaultTreinos;
+        let databaseTreinos = JSON.parse(localStorage.getItem('shape_fichas_treino')) || treinosExemplo;
         let historicoTreinosLog = JSON.parse(localStorage.getItem('shape_diario_treinos')) || [];
 
         function mudarTreino() {
@@ -347,13 +350,13 @@
             ex.nome = nn.trim() || ex.nome; ex.series = ns.trim() || ex.series;
             localStorage.setItem('shape_fichas_treino', JSON.stringify(databaseTreinos)); mudarTreino();
         }
-        function deletarExercicio(tipo, id) { if (confirm("Excluir exercício?")) { databaseTreinos[tipo] = databaseTreinos[tipo].filter(e => e.id !== id); localStorage.setItem('shape_fichas_treino', JSON.stringify(databaseTreinos)); muidarTreino(); } }
+        function deletarExercicio(tipo, id) { if (confirm("Excluir exercício?")) { databaseTreinos[tipo] = databaseTreinos[tipo].filter(e => e.id !== id); localStorage.setItem('shape_fichas_treino', JSON.stringify(databaseTreinos)); mudarTreino(); } }
         
         function finalizarTreinoCompleto() {
-            const tipo = document.getElementById('treino-selector').value; const duracao = parseInt(document.getElementById('treino-duracao').value) || 0; if (duracao <= 0) return alert("Duração inválida!");
+            const tipo = document.getElementById('treino-selector').value; const duration = parseInt(document.getElementById('treino-duracao').value) || 0; if (duration <= 0) return alert("Duração inválida!");
             let total = databaseTreinos[tipo].length; let concluidos = 0;
             databaseTreinos[tipo].forEach(ex => { const btn = document.getElementById(`btn-check-${ex.id}`); if (btn && btn.classList.contains('bg-emerald-600')) concluidos++; });
-            const agora = new Date(); historicoTreinosLog.unshift({ id: Date.now(), tipo: "🏋️ Musculação " + tipo, data: agora.toLocaleDateString('pt-BR'), hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}), duracao: duracao, calorias: Math.round(duracao * 7.5), detalhe: `Feitos: ${concluidos}/${total}` });
+            const agora = new Date(); historicoTreinosLog.unshift({ id: Date.now(), tipo: "🏋️ Musculação " + tipo, data: agora.toLocaleDateString('pt-BR'), hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}), duracao: duration, calorias: Math.round(duration * 7.5), detalhe: `Feitos: ${concluidos}/${total}` });
             localStorage.setItem('shape_diario_treinos', JSON.stringify(historicoTreinosLog)); alert(`Ficha ${tipo} salva!`); mudarTreino(); renderizarDiarioTreinos();
         }
         function salvarCardioAvulso() {
@@ -372,14 +375,10 @@
         }
         function removerItemDiario(id) { if (confirm("Remover do diário?")) { historicoTreinosLog = historicoTreinosLog.filter(l => l.id !== id); localStorage.setItem('shape_diario_treinos', JSON.stringify(historicoTreinosLog)); renderizarDiarioTreinos(); } }
 
-        // ================= ABA 3: EVOLUÇÃO (PESO INTELIGENTE COM DATA E EDICÃO) =================
-        // Alterado de array simples para objeto estruturado com id, peso e data ISO (AAAA-MM-DD)
-        let historicoPesoObjetos = JSON.parse(localStorage.getItem('shape_peso_objetos_v1')) || [
-            { id: 1, peso: 69.0, data: new Date().toISOString().split('T')[0] }
-        ];
+        // ================= ABA 3: EVOLUÇÃO (PESO UNIVERSAL E LIMPO) =================
+        let historicoPesoObjetos = JSON.parse(localStorage.getItem('shape_peso_objetos_v1')) || [];
         let graficoInstancia = null;
 
-        // Seta o input de data para o dia atual por padrão
         function definirDataAtualInput() {
             const hoje = new Date().toISOString().split('T')[0];
             document.getElementById('data-peso').value = hoje;
@@ -401,7 +400,6 @@
             };
 
             historicoPesoObjetos.push(novoRegistro);
-            // Ordena por data cronológica para o gráfico ficar correto
             historicoPesoObjetos.sort((a, b) => new Date(a.data) - new Date(b.data));
 
             localStorage.setItem('shape_peso_objetos_v1', JSON.stringify(historicoPesoObjetos));
@@ -417,7 +415,6 @@
             const registro = historicoPesoObjetos.find(p => p.id === id);
             if (!registro) return;
 
-            // Formata a data ISO antiga para exibição legível no prompt (DD/MM/AAAA)
             const [ano, mes, dia] = registro.data.split('-');
             const dataLegivelAntiga = `${dia}/${mes}/${ano}`;
 
@@ -433,7 +430,6 @@
             registro.peso = novoPeso;
             registro.data = novaDataPrompt;
 
-            // Reordena as pesagens cronicamente caso a data tenha mudado
             historicoPesoObjetos.sort((a, b) => new Date(a.data) - new Date(b.data));
             localStorage.setItem('shape_peso_objetos_v1', JSON.stringify(historicoPesoObjetos));
 
@@ -442,7 +438,6 @@
         }
 
         function deletarRegistroPeso(id) {
-            if (historicoPesoObjetos.length <= 1) return alert("Você precisa manter pelo menos um registro de peso!");
             if (confirm("Deseja realmente excluir permanentemente este registro de peso?")) {
                 historicoPesoObjetos = historicoPesoObjetos.filter(p => p.id !== id);
                 localStorage.setItem('shape_peso_objetos_v1', JSON.stringify(historicoPesoObjetos));
@@ -455,9 +450,12 @@
             const container = document.getElementById('lista-pesos-historico');
             container.innerHTML = '';
 
-            // Exibe o histórico do mais recente para o mais antigo na listagem gerenciável
-            const exibicaoInvertida = [...historicoPesoObjetos].reverse();
+            if (historicoPesoObjetos.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4 italic">Nenhum peso registrado ainda. Use o campo acima!</p>';
+                return;
+            }
 
+            const exibicaoInvertida = [...historicoPesoObjetos].reverse();
             exibicaoInvertida.forEach(reg => {
                 const [ano, mes, dia] = reg.data.split('-');
                 container.innerHTML += `
@@ -479,9 +477,20 @@
         }
 
         function renderizarGrafico() {
-            const ctx = document.getElementById('graficoPeso').getContext('2d');
+            const canvas = document.getElementById('graficoPeso');
+            const aviso = document.getElementById('aviso-grafico-vazio');
             
-            // Mapeia os labels formatando de AAAA-MM-DD para o padrão DD/MM brasileiro
+            if (historicoPesoObjetos.length === 0) {
+                canvas.classList.add('hidden');
+                aviso.classList.remove('hidden');
+                if (graficoInstancia) graficoInstancia.destroy();
+                return;
+            }
+
+            canvas.classList.remove('hidden');
+            aviso.classList.add('hidden');
+
+            const ctx = canvas.getContext('2d');
             const labels = historicoPesoObjetos.map(reg => {
                 const [, mes, dia] = reg.data.split('-');
                 return `${dia}/${mes}`;
