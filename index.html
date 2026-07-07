@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShapeVerão Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #121214; color: #e1e1e6; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="font-sans antialiased pb-28">
+
+    <header class="border-b border-gray-800 bg-[#1a1a1e] sticky top-0 z-40 shadow-md">
+        <div class="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
+                    <i class="fa-solid fa-fire-flame-curved animate-pulse"></i> ShapeVerão Pro
+                </h1>
+                <p class="text-xs text-gray-400">Meta Absoluta: Definição Muscular</p>
+            </div>
+            <div id="timer-display" class="hidden bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-xs font-bold border border-amber-500/30 items-center gap-2">
+                <i class="fa-solid fa-stopwatch"></i> Descanso: <span id="timer-count">60</span>s
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto px-4 mt-6">
+
+        <div id="tab-dieta" class="tab-content active space-y-6">
+            <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl">
+                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-emerald-400"></i> Alvo de Macronutrientes Diários
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-300 font-medium">💪 Proteínas (Músculos)</span>
+                            <span class="text-xs text-gray-400"><strong id="p-atual" class="text-emerald-400">0</strong> / 145g</span>
+                        </div>
+                        <div class="w-full bg-gray-800 h-2.5 rounded-full overflow-hidden">
+                            <div id="p-bar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-300 font-medium">⚡ Carboidratos (Energia)</span>
+                            <span class="text-xs text-gray-400"><strong id="c-atual" class="text-amber-400">0</strong> / 195g</span>
+                        </div>
+                        <div class="w-full bg-gray-800 h-2.5 rounded-full overflow-hidden">
+                            <div id="c-bar" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-300 font-medium">🥑 Gorduras (Hormônios)</span>
+                            <span class="text-xs text-gray-400"><strong id="g-atual" class="text-blue-400">0</strong> / 65g</span>
+                        </div>
+                        <div class="w-full bg-gray-800 h-2.5 rounded-full overflow-hidden">
+                            <div id="g-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-base font-semibold text-gray-200">Estrutura de Refeições</h3>
+                    <button onclick="promptNovaRefeicao()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-3 rounded-xl transition flex items-center gap-1">
+                        <i class="fa-solid fa-plus"></i> Criar Refeição
+                    </button>
+                </div>
+                <div id="container-refeicoes" class="space-y-4"></div>
+            </section>
+
+            <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl space-y-3">
+                <h3 class="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <i class="fa-solid fa-folder-plus text-amber-400"></i> Cadastrar Alimento no Banco Geral
+                </h3>
+                <div class="space-y-2">
+                    <input type="text" id="novo-nome" placeholder="Ex: Iogurte Grego Light" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-white focus:outline-none">
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="number" step="0.1" id="novo-p" placeholder="Prot (100g)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-center text-white focus:outline-none">
+                        <input type="number" step="0.1" id="novo-c" placeholder="Carb (100g)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-center text-white focus:outline-none">
+                        <input type="number" step="0.1" id="novo-g" placeholder="Gord (100g)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-center text-white focus:outline-none">
+                    </div>
+                </div>
+                <button onclick="salvarNovoAlimentoNoBanco()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs py-2 rounded-xl transition">💾 Salvar no Banco</button>
+            </section>
+        </div>
+
+        <div id="modal-alimento" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div class="bg-[#1a1a1e] w-full max-w-sm rounded-2xl border border-gray-800 p-5 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-gray-200">Adicionar Alimento em: <span id="modal-titulo-ref" class="text-emerald-400"></span></h3>
+                    <button onclick="fecharModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <input type="hidden" id="modal-target-id">
+                <div>
+                    <label class="text-[11px] text-gray-400 block mb-1">Selecionar do Banco:</label>
+                    <select id="alimento-banco" onchange="selecionarAlimentoBanco()" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-gray-200 focus:outline-none"></select>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <input type="text" id="add-nome" placeholder="Nome" class="col-span-2 bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-white">
+                    <input type="number" id="add-gramas" oninput="calcularMacrosPorGramas()" placeholder="Gramas" class="bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-center text-white">
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div class="bg-gray-900 p-2 rounded-xl text-center border border-gray-800">
+                        <span class="text-emerald-400 font-bold block">P (g)</span>
+                        <input type="number" step="0.1" id="add-p" class="w-full bg-transparent text-center focus:outline-none font-bold">
+                    </div>
+                    <div class="bg-gray-900 p-2 rounded-xl text-center border border-gray-800">
+                        <span class="text-amber-400 font-bold block">C (g)</span>
+                        <input type="number" step="0.1" id="add-c" class="w-full bg-transparent text-center focus:outline-none font-bold">
+                    </div>
+                    <div class="bg-gray-900 p-2 rounded-xl text-center border border-gray-800">
+                        <span class="text-blue-400 font-bold block">G (g)</span>
+                        <input type="number" step="0.1" id="add-g" class="w-full bg-transparent text-center focus:outline-none font-bold">
+                    </div>
+                </div>
+                <button onclick="confirmarAdicionarAlimento()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl transition">Confirmar Adição</button>
+            </div>
+        </div>
+
+        <div id="tab-treino" class="tab-content space-y-6">
+            <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-base font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-dumbbell text-emerald-400"></i> Ficha Ativa
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <select id="treino-selector" onchange="mudarTreino()" class="bg-gray-800 text-xs rounded-lg px-2 py-1 border border-gray-700 text-gray-200 focus:outline-none">
+                            <option value="A">Treino A</option>
+                            <option value="B">Treino B</option>
+                            <option value="C">Treino C</option>
+                        </select>
+                        <button onclick="adicionarNovoExercicioPrompt()" class="bg-emerald-600 hover:bg-emerald-500 text-white p-1 px-2 rounded-lg text-xs font-bold">
+                            <i class="fa-solid fa-plus"></i> Novo Ex.
+                        </button>
+                    </div>
+                </div>
+                <div id="lista-exercicios" class="space-y-3"></div>
+                <div class="pt-3 border-t border-gray-800/80 space-y-2.5">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="text-xs text-gray-400 font-medium">Duração (min):</span>
+                        <input type="number" id="treino-duracao" value="50" class="w-20 bg-gray-900 border border-gray-700 rounded-lg p-1 text-center text-xs text-white focus:outline-none">
+                    </div>
+                    <button onclick="finalizarTreinoCompleto()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-circle-check"></i> Finalizar Ficha de Musculação
+                    </button>
+                </div>
+            </section>
+
+            <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl space-y-3">
+                <h2 class="text-base font-semibold flex items-center gap-2 text-amber-400">
+                    <i class="fa-solid fa-person-running"></i> Registrar Sessão de Cárdio
+                </h2>
+                <div class="space-y-2">
+                    <input type="text" id="cardio-atividade" placeholder="Ex: Corrida na Esteira Inclinação 12%" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-white focus:outline-none">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="cardio-duracao" placeholder="Duração (min)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-center text-xs text-white focus:outline-none">
+                        <input type="number" id="cardio-calorias" placeholder="Gasto Real (kcal)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-center text-xs text-white focus:outline-none">
+                    </div>
+                </div>
+                <button onclick="salvarCardioAvulso()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-bolt"></i> Salvar Cárdio no Diário
+                </button>
+            </section>
+
+            <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl space-y-3">
+                <h3 class="text-sm font-semibold text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-book text-emerald-400"></i> Histórico / Diário de Atividades
+                </h3>
+                <div id="historico-treinos" class="space-y-2 text-xs max-h-64 overflow-y-auto pr-1"></div>
+            </section>
+        </div>
+
+        <div id="tab-evolucao" class="tab-content space-y-6">
+            <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl space-y-4">
+                <h2 class="text-lg font-semibold flex items-center gap-2"><i class="fa-solid fa-chart-line text-emerald-400"></i> Registro de Peso</h2>
+                
+                <div class="space-y-2.5">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] text-gray-400 block mb-1">Peso (kg):</label>
+                            <input type="number" step="0.1" id="novo-peso" placeholder="Ex: 68.5" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-sm text-center text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-400 block mb-1">Data do Registro:</label>
+                            <input type="date" id="data-peso" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-sm text-center text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                    <button onclick="adicionarPeso()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl text-xs font-bold transition shadow-lg flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-plus"></i> Registrar Peso
+                    </button>
+                </div>
+
+                <div class="w-full bg-gray-900 p-2 rounded-xl border border-gray-800"><canvas id="graficoPeso" class="w-full h-48"></canvas></div>
+            </section>
+
+            <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl space-y-3">
+                <h3 class="text-sm font-semibold text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-list text-amber-400"></i> Gerenciar Histórico de Pesagens
+                </h3>
+                <div id="lista-pesos-historico" class="space-y-2 text-xs max-h-52 overflow-y-auto pr-1"></div>
+            </section>
+        </div>
+
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 border-t border-gray-800 bg-[#1a1a1e]/95 backdrop-blur-md py-2.5 z-50 shadow-2xl">
+        <div class="max-w-md mx-auto grid grid-cols-3 text-center">
+            <button onclick="mudarAba('dieta')" id="btn-dieta" class="nav-btn text-emerald-400 flex flex-col items-center gap-1">
+                <i class="fa-solid fa-utensils text-lg"></i><span class="text-[11px] font-medium">Dieta</span>
+            </button>
+            <button onclick="mudarAba('treino')" id="btn-treino" class="nav-btn text-gray-500 flex flex-col items-center gap-1">
+                <i class="fa-solid fa-dumbbell text-lg"></i><span class="text-[11px] font-medium">Treino</span>
+            </button>
+            <button onclick="mudarAba('evolucao')" id="btn-evolucao" class="nav-btn text-gray-500 flex flex-col items-center gap-1">
+                <i class="fa-solid fa-chart-line text-lg"></i><span class="text-[11px] font-medium">Evolução</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // DATA DIETA E PARAMS FIXOS
+        const bancoBaseFixo = {
+            frango: { nome: "Peito de Frango Grelhado", p: 31, c: 0, g: 2.5 },
+            patinho: { nome: "Patinho Moído Cozido", p: 35.9, c: 0, g: 7.3 },
+            ovo_inteiro: { nome: "Ovo Inteiro Cozido", p: 13, c: 1, g: 9.5 },
+            clara_ovo: { nome: "Clara de Ovo Cozida", p: 11, c: 0, g: 0.2 },
+            arroz: { nome: "Arroz Branco Cozido", p: 2.5, c: 28, g: 0.2 },
+            feijao: { nome: "Feijão Carioca Cozido", p: 4.8, c: 14, g: 0.5 },
+            banana: { nome: "Banana Prata", p: 1.3, c: 26, g: 0.1 },
+            aveia: { nome: "Aveia em Flocos", p: 13.9, c: 66.6, g: 7.3 },
+            whey: { nome: "Whey Protein Concentrado", p: 80, c: 7, g: 6 }
+        };
+        let bancoCustomizado = JSON.parse(localStorage.getItem('shape_banco_custom')) || {};
+        let estruturaDieta = JSON.parse(localStorage.getItem('shape_dieta_flex_v1')) || {
+            refeicoes: [
+                { id: "ref_1", nome: "Café da Manhã", alimentos: [] },
+                { id: "ref_2", nome: "Almoço", alimentos: [] },
+                { id: "ref_3", nome: "Lanche Tarde", alimentos: [] }
+            ]
+        };
+        function renderizarListaAlimentosSelect() {
+            const select = document.getElementById('alimento-banco'); select.innerHTML = '<option value="">-- Selecione do seu Banco --</option>';
+            const todos = { ...bancoBaseFixo, ...bancoCustomizado };
+            for (let k in todos) { let opt = document.createElement('option'); opt.value = k; opt.innerText = todos[k].nome; select.appendChild(opt); }
+        }
+        function promptNovaRefeicao() {
+            const nome = prompt("Nome da refeição:"); if (!nome || nome.trim() === "") return;
+            estruturaDieta.refeicoes.push({ id: "ref_" + Date.now(), nome: nome.trim(), alimentos: [] }); salvarERenderizarTudo();
+        }
+        function excluirRefeicao(id) { if (confirm("Excluir refeição?")) { estruturaDieta.refeicoes = estruturaDieta.refeicoes.filter(r => r.id !== id); salvarERenderizarTudo(); } }
+        function abrirModalAlimento(idRefeicao, nomeRefeicao) { document.getElementById('modal-target-id').value = idRefeicao; document.getElementById('modal-titulo-ref').innerText = nomeRefeicao; document.getElementById('modal-alimento').classList.remove('hidden'); renderizarListaAlimentosSelect(); }
+        function fecharModal() { document.getElementById('modal-alimento').classList.add('hidden'); }
+        function selecionarAlimentoBanco() {
+            const chave = document.getElementById('alimento-banco').value; if(!chave) return; const todos = { ...bancoBaseFixo, ...bancoCustomizado };
+            document.getElementById('add-nome').value = todos[chave].nome; document.getElementById('add-gramas').value = 100; calcularMacrosPorGramas();
+        }
+        function calcularMacrosPorGramas() {
+            const chave = document.getElementById('alimento-banco').value; const gramas = parseFloat(document.getElementById('add-gramas').value) || 0; const todos = { ...bancoBaseFixo, ...bancoCustomizado };
+            if (chave && todos[chave]) { document.getElementById('add-p').value = ((todos[chave].p * gramas) / 100).toFixed(1); document.getElementById('add-c').value = ((todos[chave].c * gramas) / 100).toFixed(1); document.getElementById('add-g').value = ((todos[chave].g * gramas) / 100).toFixed(1); }
+        }
+        function confirmarAdicionarAlimento() {
+            const targetId = document.getElementById('modal-target-id').value; let nome = document.getElementById('add-nome').value.trim() || "Alimento Avulso"; const gramas = document.getElementById('add-gramas').value;
+            const p = parseFloat(document.getElementById('add-p').value) || 0; const c = parseFloat(document.getElementById('add-c').value) || 0; const g = parseFloat(document.getElementById('add-g').value) || 0;
+            if(gramas) nome += ` (${gramas}g)`; const refeicao = estruturaDieta.refeicoes.find(r => r.id === targetId);
+            if (refeicao) { refeicao.alimentos.push({ id_alim: "alim_" + Date.now(), nome: nome, p: p, c: c, g: g }); fecharModal(); salvarERenderizarTudo(); }
+        }
+        function removerAlimento(idRef, idAlim) { const refeicao = estruturaDieta.refeicoes.find(r => r.id === idRef); if (refeicao) { refeicao.alimentos = refeicao.alimentos.filter(a => a.id_alim !== idAlim); salvarERenderizarTudo(); } }
+        function salvarNovoAlimentoNoBanco() {
+            const nome = document.getElementById('novo-nome').value.trim(); const p = parseFloat(document.getElementById('novo-p').value) || 0; const c = parseFloat(document.getElementById('novo-c').value) || 0; const g = parseFloat(document.getElementById('novo-g').value) || 0;
+            if(!nome) return alert("Digite o nome!"); bancoCustomizado['custom_' + Date.now()] = { nome: nome, p: p, c: c, g: g }; localStorage.setItem('shape_banco_custom', JSON.stringify(bancoCustomizado));
+            document.getElementById('novo-nome').value = ''; document.getElementById('novo-p').value = ''; document.getElementById('novo-c').value = ''; document.getElementById('novo-g').value = ''; alert("Salvo!");
+        }
+        function salvarERenderizarTudo() {
+            localStorage.setItem('shape_dieta_flex_v1', JSON.stringify(estruturaDieta)); let totalP = 0, totalC = 0, totalG = 0; const container = document.getElementById('container-refeicoes'); container.innerHTML = "";
+            estruturaDieta.refeicoes.forEach(ref => {
+                let refP = 0, refC = 0, refG = 0; let alimentosHTML = "";
+                ref.alimentos.forEach(alim => {
+                    refP += alim.p; refC += alim.c; refG += alim.g;
+                    alimentosHTML += `<div class="flex justify-between items-center bg-gray-900/60 p-2 rounded-lg border border-gray-800/60 text-[11px] mt-1.5"><span class="text-gray-300 font-medium">${alim.nome}</span><div class="flex items-center gap-2"><span class="text-emerald-400">${Math.round(alim.p)}g P</span> | <span class="text-amber-400">${Math.round(alim.c)}g C</span> | <span class="text-blue-400">${Math.round(alim.g)}g G</span><button onclick="removerAlimento('${ref.id}', '${alim.id_alim}')" class="text-red-400 ml-1"><i class="fa-solid fa-trash"></i></button></div></div>`;
+                });
+                totalP += refP; totalC += refC; totalG += refG;
+                container.innerHTML += `<div class="bg-[#1a1a1e] p-4 rounded-2xl border border-gray-800 shadow-lg space-y-3"><div class="flex justify-between items-center border-b border-gray-800/80 pb-2"><div><h4 class="text-sm font-bold text-gray-200">🍴 ${ref.nome}</h4><div class="text-[10px] text-gray-400 mt-0.5"><span class="text-emerald-400">${Math.round(refP)}g P</span> | <span class="text-amber-400">${Math.round(refC)}g C</span> | <span class="text-blue-400">${Math.round(refG)}g G</span></div></div><div class="flex items-center gap-1"><button onclick="abrirModalAlimento('${ref.id}', '${ref.nome}')" class="bg-gray-800 text-emerald-400 border border-gray-700 text-[11px] font-bold py-1 px-2.5 rounded-lg">+ Add</button><button onclick="excluirRefeicao('${ref.id}')" class="text-gray-500 hover:text-red-400 p-1 text-xs"><i class="fa-solid fa-trash-can"></i></button></div></div><div>${ref.alimentos.length === 0 ? '<p class="text-gray-500 text-[11px] italic py-1">Nenhum alimento.</p>' : alimentosHTML}</div></div>`;
+            });
+            document.getElementById('p-atual').innerText = Math.round(totalP); document.getElementById('c-atual').innerText = Math.round(totalC); document.getElementById('g-atual').innerText = Math.round(totalG);
+            document.getElementById('p-bar').style.width = `${Math.min((totalP / 145) * 100, 100)}%`; document.getElementById('c-bar').style.width = `${Math.min((totalC / 195) * 100, 100)}%`; document.getElementById('g-bar').style.width = `${Math.min((totalG / 65) * 100, 100)}%`;
+        }
+
+        // ================= SISTEMA DE FICHAS DE TREINOS EDITÁVEIS =================
+        const defaultTreinos = {
+            A: [{ id: "A1", nome: "Supino Inclinado (Halteres)", series: "4x 8-10" }, { id: "A2", nome: "Supino Reto", series: "3x 10" }, { id: "A3", nome: "Desenvolvimento C/ Halteres", series: "3x 10" }, { id: "A4", nome: "Elevação Lateral", series: "4x 12-15" }, { id: "A5", nome: "Tríceps Pulley (Corda)", series: "4x 12" }],
+            B: [{ id: "B1", nome: "Puxada Alta (Pulley)", series: "4x 10" }, { id: "B2", nome: "Remada Baixa/Curvada", series: "4x 10" }, { id: "B3", nome: "Crucifixo Invertido", series: "3x 12" }, { id: "B4", nome: "Rosca Direta (Barra W)", series: "3x 10" }, { id: "B5", nome: "Rosca Martelo", series: "3x 12" }, { id: "B6", nome: "Abdominal Supra", series: "4x 15-20" }],
+            C: [{ id: "C1", nome: "Agachamento ou Leg 45°", series: "4x 8-10" }, { id: "C2", nome: "Cadeira Extensora", series: "3x 12" }, { id: "C3", nome: "Mesa ou Cadeira Flexora", series: "4x 10-12" }, { id: "C4", nome: "Stiff", series: "3x 10" }, { id: "C5", nome: "Gêmeos em Pé", series: "4x 15" }]
+        };
+        let databaseTreinos = JSON.parse(localStorage.getItem('shape_fichas_treino')) || defaultTreinos;
+        let historicoTreinosLog = JSON.parse(localStorage.getItem('shape_diario_treinos')) || [];
+
+        function mudarTreino() {
+            const tipo = document.getElementById('treino-selector').value; const container = document.getElementById('lista-exercicios'); container.innerHTML = '';
+            if (!databaseTreinos[tipo] || databaseTreinos[tipo].length === 0) { container.innerHTML = '<p class="text-gray-500 text-center py-4 italic">Nenhum exercício cadastrado.</p>'; return; }
+            databaseTreinos[tipo].forEach((ex) => {
+                container.innerHTML += `
+                    <div id="card-ex-${ex.id}" class="flex flex-col p-3.5 bg-gray-800/40 rounded-xl border border-gray-800 transition space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                                <button onclick="alternarConclusaoExercicio('${ex.id}')" id="btn-check-${ex.id}" class="w-6 h-6 rounded-full border-2 border-gray-600 flex items-center justify-center text-transparent hover:border-emerald-500 transition shrink-0"><i class="fa-solid fa-check text-xs"></i></button>
+                                <span id="label-ex-${ex.id}" class="text-sm font-medium text-gray-200 truncate">${ex.nome}</span>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0 ml-2">
+                                <span class="text-[11px] font-semibold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-900/30">${ex.series}</span>
+                                <button onclick="editarExercicio('${tipo}', '${ex.id}')" class="text-gray-400 hover:text-amber-400 text-xs p-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button onclick="deletarExercicio('${tipo}', '${ex.id}')" class="text-gray-500 hover:text-red-400 text-xs p-1"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-1 border-t border-gray-800/50">
+                            <button onclick="iniciarDescanso()" class="text-[11px] text-amber-400 bg-amber-950/20 px-2 py-1 rounded border border-amber-900/30 flex items-center gap-1"><i class="fa-solid fa-stopwatch"></i> Descanso</button>
+                            <div class="flex items-center gap-1"><span class="text-[10px] text-gray-400">Carga:</span><input type="text" placeholder="-- kg" class="w-14 text-center bg-gray-900 border border-gray-700 rounded p-0.5 text-xs text-white focus:outline-none"></div>
+                        </div>
+                    </div>`;
+            });
+        }
+        function alternarConclusaoExercicio(id) {
+            const btn = document.getElementById(`btn-check-${id}`); const card = document.getElementById(`card-ex-${id}`); const label = document.getElementById(`label-ex-${id}`);
+            if (btn.classList.contains('bg-emerald-600')) {
+                btn.className = "w-6 h-6 rounded-full border-2 border-gray-600 flex items-center justify-center text-transparent hover:border-emerald-500 transition shrink-0"; card.className = "flex flex-col p-3.5 bg-gray-800/40 rounded-xl border border-gray-800 transition space-y-2"; label.classList.remove('line-through', 'text-gray-500'); label.classList.add('text-gray-200');
+            } else {
+                btn.className = "w-6 h-6 rounded-full bg-emerald-600 border-2 border-emerald-600 flex items-center justify-center text-white transition shadow-md shrink-0"; card.className = "flex flex-col p-3.5 bg-emerald-950/10 rounded-xl border border-emerald-800/50 transition space-y-2 opacity-75"; label.classList.add('line-through', 'text-gray-500'); label.classList.remove('text-gray-200');
+            }
+        }
+        function adicionarNovoExercicioPrompt() {
+            const tipo = document.getElementById('treino-selector').value; const nome = prompt("Nome do exercício:"); if (!nome || !nome.trim()) return;
+            const series = prompt("Séries e repetições:", "4x 10"); if (!series) return;
+            databaseTreinos[tipo].push({ id: "ex_" + Date.now(), nome: nome.trim(), series: series.trim() }); localStorage.setItem('shape_fichas_treino', JSON.stringify(databaseTreinos)); mudarTreino();
+        }
+        function editarExercicio(tipo, id) {
+            const ex = databaseTreinos[tipo].find(e => e.id === id); if (!ex) return;
+            const nn = prompt("Editar nome:", ex.nome); if (nn === null) return;
+            const ns = prompt("Editar séries:", ex.series); if (ns === null) return;
+            ex.nome = nn.trim() || ex.nome; ex.series = ns.trim() || ex.series;
+            localStorage.setItem('shape_fichas_treino', JSON.stringify(databaseTreinos)); mudarTreino();
+        }
+        function deletarExercicio(tipo, id) { if (confirm("Excluir exercício?")) { databaseTreinos[tipo] = databaseTreinos[tipo].filter(e => e.id !== id); localStorage.setItem('shape_fichas_treino', JSON.stringify(databaseTreinos)); muidarTreino(); } }
+        
+        function finalizarTreinoCompleto() {
+            const tipo = document.getElementById('treino-selector').value; const duracao = parseInt(document.getElementById('treino-duracao').value) || 0; if (duracao <= 0) return alert("Duração inválida!");
+            let total = databaseTreinos[tipo].length; let concluidos = 0;
+            databaseTreinos[tipo].forEach(ex => { const btn = document.getElementById(`btn-check-${ex.id}`); if (btn && btn.classList.contains('bg-emerald-600')) concluidos++; });
+            const agora = new Date(); historicoTreinosLog.unshift({ id: Date.now(), tipo: "🏋️ Musculação " + tipo, data: agora.toLocaleDateString('pt-BR'), hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}), duracao: duracao, calorias: Math.round(duracao * 7.5), detalhe: `Feitos: ${concluidos}/${total}` });
+            localStorage.setItem('shape_diario_treinos', JSON.stringify(historicoTreinosLog)); alert(`Ficha ${tipo} salva!`); mudarTreino(); renderizarDiarioTreinos();
+        }
+        function salvarCardioAvulso() {
+            const at = document.getElementById('cardio-atividade').value.trim(); const du = parseInt(document.getElementById('cardio-duracao').value) || 0; const ca = parseInt(document.getElementById('cardio-calorias').value) || 0;
+            if (!at || du <= 0 || ca <= 0) return alert("Preencha todos os dados corretamente!");
+            const agora = new Date(); historicoTreinosLog.unshift({ id: Date.now(), tipo: "🏃 " + at, data: agora.toLocaleDateString('pt-BR'), hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}), duracao: du, calorias: ca, detalhe: "Aeróbico" });
+            localStorage.setItem('shape_diario_treinos', JSON.stringify(historicoTreinosLog)); document.getElementById('cardio-atividade').value = ''; document.getElementById('cardio-duracao').value = ''; document.getElementById('cardio-calorias').value = '';
+            alert("Cárdio salvo!"); renderizarDiarioTreinos();
+        }
+        function renderizarDiarioTreinos() {
+            const container = document.getElementById('historico-treinos'); if (historicoTreinosLog.length === 0) { container.innerHTML = '<p class="text-gray-500 text-center py-4 italic">Nenhum registro ainda.</p>'; return; }
+            container.innerHTML = ''; historicoTreinosLog.forEach(log => {
+                const isC = log.tipo.includes('🏃');
+                container.innerHTML += `<div class="bg-gray-900 p-3 rounded-xl border ${isC ? 'border-amber-600/30':'border-gray-800'} flex justify-between items-center"><div><span class="font-bold ${isC ? 'text-amber-400':'text-emerald-400'} block">${log.tipo}</span><span class="text-[10px] text-gray-400"><i class="fa-regular fa-calendar"></i> ${log.data} às ${log.hora}</span></div><div class="text-right"><span class="text-red-400 font-bold block">-${log.calorias} kcal</span><span class="text-[10px] text-gray-400">${log.duracao} min | ${log.detalhe}</span></div><button onclick="removerItemDiario(${log.id})" class="text-gray-600 hover:text-red-400 ml-2 text-[10px] self-start pt-0.5"><i class="fa-solid fa-xmark"></i></button></div>`;
+            });
+        }
+        function removerItemDiario(id) { if (confirm("Remover do diário?")) { historicoTreinosLog = historicoTreinosLog.filter(l => l.id !== id); localStorage.setItem('shape_diario_treinos', JSON.stringify(historicoTreinosLog)); renderizarDiarioTreinos(); } }
+
+        // ================= ABA 3: EVOLUÇÃO (PESO INTELIGENTE COM DATA E EDICÃO) =================
+        // Alterado de array simples para objeto estruturado com id, peso e data ISO (AAAA-MM-DD)
+        let historicoPesoObjetos = JSON.parse(localStorage.getItem('shape_peso_objetos_v1')) || [
+            { id: 1, peso: 69.0, data: new Date().toISOString().split('T')[0] }
+        ];
+        let graficoInstancia = null;
+
+        // Seta o input de data para o dia atual por padrão
+        function definirDataAtualInput() {
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('data-peso').value = hoje;
+        }
+
+        function adicionarPeso() {
+            const inputPeso = document.getElementById('novo-peso');
+            const inputData = document.getElementById('data-peso');
+            const peso = parseFloat(inputPeso.value);
+            const data = inputData.value;
+
+            if (!peso || peso <= 0) return alert("Por favor, digite um peso válido!");
+            if (!data) return alert("Por favor, selecione uma data válida!");
+
+            const novoRegistro = {
+                id: Date.now(),
+                peso: peso,
+                data: data
+            };
+
+            historicoPesoObjetos.push(novoRegistro);
+            // Ordena por data cronológica para o gráfico ficar correto
+            historicoPesoObjetos.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+            localStorage.setItem('shape_peso_objetos_v1', JSON.stringify(historicoPesoObjetos));
+            
+            inputPeso.value = '';
+            definirDataAtualInput();
+            
+            renderizarGrafico();
+            renderizarHistoricoGerenciávelPesos();
+        }
+
+        function editarRegistroPeso(id) {
+            const registro = historicoPesoObjetos.find(p => p.id === id);
+            if (!registro) return;
+
+            // Formata a data ISO antiga para exibição legível no prompt (DD/MM/AAAA)
+            const [ano, mes, dia] = registro.data.split('-');
+            const dataLegivelAntiga = `${dia}/${mes}/${ano}`;
+
+            const novoPesoPrompt = prompt(`Editar Peso (kg) para o registro de ${dataLegivelAntiga}:`, registro.peso);
+            if (novoPesoPrompt === null) return;
+            const novoPeso = parseFloat(novoPesoPrompt);
+            if (!novoPeso || novoPeso <= 0) return alert("Peso inválido!");
+
+            const novaDataPrompt = prompt(`Editar Data (use o formato AAAA-MM-DD):`, registro.data);
+            if (novaDataPrompt === null) return;
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(novaDataPrompt)) return alert("Formato de data inválido! Use AAAA-MM-DD.");
+
+            registro.peso = novoPeso;
+            registro.data = novaDataPrompt;
+
+            // Reordena as pesagens cronicamente caso a data tenha mudado
+            historicoPesoObjetos.sort((a, b) => new Date(a.data) - new Date(b.data));
+            localStorage.setItem('shape_peso_objetos_v1', JSON.stringify(historicoPesoObjetos));
+
+            renderizarGrafico();
+            renderizarHistoricoGerenciávelPesos();
+        }
+
+        function deletarRegistroPeso(id) {
+            if (historicoPesoObjetos.length <= 1) return alert("Você precisa manter pelo menos um registro de peso!");
+            if (confirm("Deseja realmente excluir permanentemente este registro de peso?")) {
+                historicoPesoObjetos = historicoPesoObjetos.filter(p => p.id !== id);
+                localStorage.setItem('shape_peso_objetos_v1', JSON.stringify(historicoPesoObjetos));
+                renderizarGrafico();
+                renderizarHistoricoGerenciávelPesos();
+            }
+        }
+
+        function renderizarHistoricoGerenciávelPesos() {
+            const container = document.getElementById('lista-pesos-historico');
+            container.innerHTML = '';
+
+            // Exibe o histórico do mais recente para o mais antigo na listagem gerenciável
+            const exibicaoInvertida = [...historicoPesoObjetos].reverse();
+
+            exibicaoInvertida.forEach(reg => {
+                const [ano, mes, dia] = reg.data.split('-');
+                container.innerHTML += `
+                    <div class="bg-gray-900 p-2.5 rounded-xl border border-gray-800 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-weight-scale text-emerald-400"></i>
+                            <div>
+                                <span class="font-bold text-gray-200">${reg.peso.toFixed(1)} kg</span>
+                                <span class="text-[10px] text-gray-400 block"><i class="fa-regular fa-calendar"></i> ${dia}/${mes}/${ano}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="editarRegistroPeso(${reg.id})" class="text-gray-400 hover:text-amber-400 p-1 text-xs" title="Editar pesagem"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deletarRegistroPeso(${reg.id})" class="text-gray-500 hover:text-red-400 p-1 text-xs" title="Excluir pesagem"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderizarGrafico() {
+            const ctx = document.getElementById('graficoPeso').getContext('2d');
+            
+            // Mapeia os labels formatando de AAAA-MM-DD para o padrão DD/MM brasileiro
+            const labels = historicoPesoObjetos.map(reg => {
+                const [, mes, dia] = reg.data.split('-');
+                return `${dia}/${mes}`;
+            });
+            const dadosPesos = historicoPesoObjetos.map(reg => reg.peso);
+
+            if (graficoInstancia) graficoInstancia.destroy();
+            graficoInstancia = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Peso (kg)',
+                        data: dadosPesos,
+                        borderColor: '#34d399',
+                        backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                        tension: 0.2,
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                    }
+                }
+            });
+        }
+
+        // TIMER & AUXILIARES NAVIGATION
+        let timerIntervalo;
+        function iniciarDescanso() {
+            clearInterval(timerIntervalo); const display = document.getElementById('timer-display'); const contagem = document.getElementById('timer-count');
+            let tempo = 60; display.className = "bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-xs font-bold border border-amber-500/30 flex items-center gap-2"; contagem.innerText = tempo;
+            timerIntervalo = setInterval(() => { tempo--; contagem.innerText = tempo; if(tempo <= 0) { clearInterval(timerIntervalo); display.className = "hidden"; const context = new (window.AudioContext || window.webkitAudioContext)(); const osc = context.createOscillator(); osc.type = 'sine'; osc.frequency.setValueAtTime(800, context.currentTime); osc.connect(context.destination); osc.start(); osc.stop(context.currentTime + 0.3); } }, 1000);
+        }
+        function mudarAba(abaNome) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('text-emerald-400'); el.classList.add('text-gray-500'); });
+            document.getElementById(`tab-${abaNome}`).classList.add('active');
+            document.getElementById(`btn-${abaNome}`).classList.remove('text-gray-500'); document.getElementById(`btn-${abaNome}`).classList.add('text-emerald-400');
+            if (abaNome === 'evolucao') { renderizarGrafico(); renderizarHistoricoGerenciávelPesos(); }
+        }
+
+        // Inicialização Global
+        salvarERenderizarTudo();
+        mudarTreino();
+        renderizarDiarioTreinos();
+        definirDataAtualInput();
+    </script>
+</body>
+</html>
