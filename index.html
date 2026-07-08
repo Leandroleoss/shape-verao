@@ -159,10 +159,21 @@
                     <button id="btn-modo-auto" onclick="mudarModoMetas('auto')" class="w-1/2 py-1.5 rounded-lg text-center font-bold bg-emerald-600 text-white transition">🔮 Auto (Fácil)</button>
                     <button id="btn-modo-manual" onclick="mudarModoMetas('manual')" class="w-1/2 py-1.5 rounded-lg text-center font-bold text-gray-400 hover:text-white transition">⚙️ Manual</button>
                 </div>
+                
                 <div id="form-meta-auto" class="space-y-3 text-xs">
-                    <div>
-                        <label class="text-gray-400 block mb-1">Seu Peso Atual (kg):</label>
-                        <input type="number" id="auto-peso-input" placeholder="Ex: 75" oninput="calcularMacrosAutomaticos()" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-sm font-bold text-white focus:outline-none">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="text-gray-400 block mb-1">Peso (kg):</label>
+                            <input type="number" id="auto-peso-input" placeholder="Ex: 75" oninput="calcularMacrosAutomaticos()" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-sm font-bold text-white text-center focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-gray-400 block mb-1">Altura (cm):</label>
+                            <input type="number" id="auto-altura-input" placeholder="Ex: 175" oninput="calcularMacrosAutomaticos()" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-sm font-bold text-white text-center focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-gray-400 block mb-1">Idade (anos):</label>
+                            <input type="number" id="auto-idade-input" placeholder="Ex: 26" oninput="calcularMacrosAutomaticos()" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-sm font-bold text-white text-center focus:outline-none">
+                        </div>
                     </div>
                     <div>
                         <label class="text-gray-400 block mb-1">Qual o seu Objetivo Principal?</label>
@@ -181,6 +192,7 @@
                         </div>
                     </div>
                 </div>
+                
                 <div id="form-meta-manual" class="hidden space-y-3 text-xs">
                     <div>
                         <label class="text-emerald-400 font-bold block mb-1">Meta de Proteínas (g):</label>
@@ -380,12 +392,17 @@
             }
         }
 
-        // CONTROLADORES DE METAS E CALCULADORA
+        // CONTROLADORES DE METAS E CALCULADORA AVANÇADA (MIFFLIN-ST JEOR)
         function abrirModalMetas() {
             let historicoPesos = JSON.parse(localStorage.getItem('shape_peso_objects_v1')) || [];
             if(historicoPesos.length > 0 && !document.getElementById('auto-peso-input').value) {
                 document.getElementById('auto-peso-input').value = historicoPesos[historicoPesos.length - 1].peso;
             }
+            
+            // Carrega altura e idade persistidas
+            document.getElementById('auto-altura-input').value = localStorage.getItem('shape_user_altura') || '';
+            document.getElementById('auto-idade-input').value = localStorage.getItem('shape_user_idade') || '';
+
             document.getElementById('meta-p-input').value = metasMacros.p;
             document.getElementById('meta-c-input').value = metasMacros.c;
             document.getElementById('meta-g-input').value = metasMacros.g;
@@ -414,23 +431,53 @@
 
         function calcularMacrosAutomaticos() {
             const peso = parseFloat(document.getElementById('auto-peso-input').value) || 0;
+            const altura = parseFloat(document.getElementById('auto-altura-input').value) || 0;
+            const idade = parseInt(document.getElementById('auto-idade-input').value) || 0;
             const objetivo = document.getElementById('auto-objetivo-select').value;
+            
             let p = 0, c = 0, g = 0;
-            if(peso > 0) {
-                if(objetivo === 'emagrecer') { p = Math.round(peso * 2.0); g = Math.round(peso * 0.8); c = Math.round(peso * 2.0); }
-                else if(objetivo === 'ganhar') { p = Math.round(peso * 2.0); g = Math.round(peso * 1.0); c = Math.round(peso * 4.0); }
-                else { p = Math.round(peso * 1.6); g = Math.round(peso * 0.9); c = Math.round(peso * 3.0); }
+
+            if (peso > 0 && altura > 0 && idade > 0) {
+                // Equação Científica de Mifflin-St Jeor para Base Ativa (Indivíduo Moderadamente Ativo que treina)
+                const tmb = (10 * peso) + (6.25 * altura) - (5 * idade) + 5;
+                const gastoTotalEstimado = tmb * 1.375;
+
+                if (objetivo === 'emagrecer') {
+                    p = Math.round(peso * 2.2); 
+                    g = Math.round(peso * 0.7);
+                    const calAlvo = gastoTotalEstimado - 400;
+                    const calRestantes = calAlvo - ((p * 4) + (g * 9));
+                    c = Math.max(Math.round(calRestantes / 4), Math.round(peso * 1.5));
+                } else if (objetivo === 'ganhar') {
+                    p = Math.round(peso * 2.0);
+                    g = Math.round(peso * 1.0);
+                    const calAlvo = gastoTotalEstimado + 300;
+                    const calRestantes = calAlvo - ((p * 4) + (g * 9));
+                    c = Math.max(Math.round(calRestantes / 4), Math.round(peso * 3.5));
+                } else {
+                    p = Math.round(peso * 1.8);
+                    g = Math.round(peso * 0.9);
+                    const calRestantes = gastoTotalEstimado - ((p * 4) + (g * 9));
+                    c = Math.max(Math.round(calRestantes / 4), Math.round(peso * 2.5));
+                }
             }
-            document.getElementById('preview-p').innerText = p; document.getElementById('preview-c').innerText = c; document.getElementById('preview-g').innerText = g;
+
+            document.getElementById('preview-p').innerText = p; 
+            document.getElementById('preview-c').innerText = c; 
+            document.getElementById('preview-g').innerText = g;
         }
 
         function salvarMetasFinais() {
+            // Guarda altura e idade locais para reuso futuro
+            localStorage.setItem('shape_user_altura', document.getElementById('auto-altura-input').value);
+            localStorage.setItem('shape_user_idade', document.getElementById('auto-idade-input').value);
+
             let p = 145, c = 195, g = 65;
             if(modoMetasAtual === 'auto') {
                 const previewP = parseInt(document.getElementById('preview-p').innerText);
                 const previewC = parseInt(document.getElementById('preview-c').innerText);
                 const previewG = parseInt(document.getElementById('preview-g').innerText);
-                if(previewP <= 0) return alert("Por favor, digite o seu peso para fazer o cálculo!");
+                if(previewP <= 0) return alert("Por favor, informe peso, altura e idade para o cálculo preciso!");
                 p = previewP; c = previewC; g = previewG;
             } else {
                 p = parseInt(document.getElementById('meta-p-input').value) || 145;
@@ -483,7 +530,7 @@
             renderizarDietaCompletaUI();
         }
 
-        // RENDERIZADOR COM HISTÓRICO VISUAL NÃO-INVASIVO DE HISTÓRICO (ONTEM)
+        // RENDERIZADOR COM HISTÓRICO VISUAL NÃO-INVASIVO (ONTEM)
         function renderizarDietaCompletaUI() {
             let totalP = 0, totalC = 0, totalG = 0; const container = document.getElementById('container-refeicoes'); container.innerHTML = "";
             
@@ -491,7 +538,6 @@
             document.getElementById('c-meta-display').innerText = metasMacros.c;
             document.getElementById('g-meta-display').innerText = metasMacros.g;
 
-            // Busca os dados de ontem com propósitos de sugestão rápida
             let dataOntem = new Date(dataDietaAtual + "T12:00:00");
             dataOntem.setDate(dataOntem.getDate() - 1);
             const ontemChaveStr = dataOntem.toISOString().split('T')[0];
@@ -504,7 +550,6 @@
                     alimentosHTML += `<div class="flex justify-between items-center bg-gray-900/60 p-2 rounded-lg border border-gray-800/60 text-[11px] mt-1.5"><span class="text-gray-300 font-medium">${alim.nome}</span><div class="flex items-center gap-2"><span class="text-emerald-400">${Math.round(alim.p)}g P</span> | <span class="text-amber-400">${Math.round(alim.c)}g C</span> | <span class="text-blue-400">${Math.round(alim.g)}g G</span><button onclick="removerAlimento('${ref.id}', '${alim.id_alim}')" class="text-red-400 ml-1"><i class="fa-solid fa-trash"></i></button></div></div>`;
                 });
 
-                // Mapeia histórico da refeição correspondente de ontem
                 let refeicaoCorrespondenteOntem = dadosOntem.refeicoes.find(r => r.nome === ref.nome);
                 let historicoHTML = "";
                 
@@ -643,7 +688,7 @@
             renderizarGrafico(); renderizarHistoricoGerenciávelPesos();
         }
 
-        function deletarRegistroPeso(id) {
+        function deleteRegistroPeso(id) {
             if (confirm("Deseja realmente excluir permanentemente este registro de peso?")) {
                 historicoPesoObjetos = historicoPesoObjetos.filter(p => p.id !== id);
                 localStorage.setItem('shape_peso_objects_v1', JSON.stringify(historicoPesoObjetos));
@@ -657,7 +702,7 @@
             const exibicaoInvertida = [...historicoPesoObjetos].reverse();
             exibicaoInvertida.forEach(reg => {
                 const [ano, mes, dia] = reg.data.split('-');
-                container.innerHTML += `<div class="bg-gray-900 p-2.5 rounded-xl border border-gray-800 flex justify-between items-center"><div class="flex items-center gap-2"><i class="fa-solid fa-weight-scale text-emerald-400"></i><div><span class="font-bold text-gray-200">${reg.peso.toFixed(1)} kg</span><span class="text-[10px] text-gray-400 block"><i class="fa-regular fa-calendar"></i> ${dia}/${mes}/${ano}</span></div></div><div class="flex items-center gap-1.5"><button onclick="editarRegistroPeso(${reg.id})" class="text-gray-400 hover:text-amber-400 p-1 text-xs"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deletarRegistroPeso(${reg.id})" class="text-gray-500 hover:text-red-400 p-1 text-xs"><i class="fa-solid fa-trash-can"></i></button></div></div>`;
+                container.innerHTML += `<div class="bg-gray-900 p-2.5 rounded-xl border border-gray-800 flex justify-between items-center"><div class="flex items-center gap-2"><i class="fa-solid fa-weight-scale text-emerald-400"></i><div><span class="font-bold text-gray-200">${reg.peso.toFixed(1)} kg</span><span class="text-[10px] text-gray-400 block"><i class="fa-regular fa-calendar"></i> ${dia}/${mes}/${ano}</span></div></div><div class="flex items-center gap-1.5"><button onclick="editarRegistroPeso(${reg.id})" class="text-gray-400 hover:text-amber-400 p-1 text-xs"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteRegistroPeso(${reg.id})" class="text-gray-500 hover:text-red-400 p-1 text-xs"><i class="fa-solid fa-trash-can"></i></button></div></div>`;
             });
         }
 
