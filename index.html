@@ -32,6 +32,20 @@
     <main class="max-w-md mx-auto px-4 mt-6">
 
         <div id="tab-dieta" class="tab-content active space-y-6">
+            
+            <div class="bg-[#1a1a1e] p-3 rounded-2xl border border-gray-800 flex items-center justify-between gap-2 shadow-lg">
+                <button onclick="mudarDataDieta(-1)" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs px-2.5 py-1.5 rounded-xl border border-gray-700 transition">
+                    <i class="fa-solid fa-chevron-left"></i> Ontem
+                </button>
+                <div class="text-center">
+                    <span id="label-data-dieta" class="text-xs font-bold text-emerald-400 block">Hoje</span>
+                    <input type="date" id="input-data-dieta" onchange="carregarDietaDaDataSelecionada()" class="bg-transparent border-0 text-[11px] text-gray-400 text-center focus:outline-none cursor-pointer">
+                </div>
+                <button onclick="mudarDataDieta(1)" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs px-2.5 py-1.5 rounded-xl border border-gray-700 transition">
+                    Amanhã <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
             <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold flex items-center gap-2">
@@ -67,7 +81,7 @@
                             <span class="text-xs text-gray-400"><strong id="g-atual" class="text-blue-400">0</strong> / <span id="g-meta-display">65</span>g</span>
                         </div>
                         <div class="w-full bg-gray-800 h-2.5 rounded-full overflow-hidden">
-                            <div id="g-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
+                            <div id="g-bar" class="bg-blue-400 h-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -141,12 +155,10 @@
                     </div>
                     <button onclick="fecharModalMetas()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-
                 <div class="flex bg-gray-900 p-1 rounded-xl text-xs">
                     <button id="btn-modo-auto" onclick="mudarModoMetas('auto')" class="w-1/2 py-1.5 rounded-lg text-center font-bold bg-emerald-600 text-white transition">🔮 Auto (Fácil)</button>
                     <button id="btn-modo-manual" onclick="mudarModoMetas('manual')" class="w-1/2 py-1.5 rounded-lg text-center font-bold text-gray-400 hover:text-white transition">⚙️ Manual</button>
                 </div>
-
                 <div id="form-meta-auto" class="space-y-3 text-xs">
                     <div>
                         <label class="text-gray-400 block mb-1">Seu Peso Atual (kg):</label>
@@ -169,7 +181,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="form-meta-manual" class="hidden space-y-3 text-xs">
                     <div>
                         <label class="text-emerald-400 font-bold block mb-1">Meta de Proteínas (g):</label>
@@ -184,7 +195,6 @@
                         <input type="number" id="meta-g-input" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:outline-none">
                     </div>
                 </div>
-
                 <button onclick="salvarMetasFinais()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl transition shadow-lg">Aplicar Alvo de Dieta</button>
             </div>
         </div>
@@ -245,7 +255,6 @@
         <div id="tab-evolucao" class="tab-content space-y-6">
             <section class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl space-y-4">
                 <h2 class="text-lg font-semibold flex items-center gap-2"><i class="fa-solid fa-chart-line text-emerald-400"></i> Registro de Peso</h2>
-                
                 <div class="space-y-2.5">
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -261,7 +270,6 @@
                         <i class="fa-solid fa-plus"></i> Registrar Peso
                     </button>
                 </div>
-
                 <div class="w-full bg-gray-900 p-2 rounded-xl border border-gray-800">
                     <canvas id="graficoPeso" class="w-full h-48"></canvas>
                     <p id="aviso-grafico-vazio" class="text-gray-500 text-center text-xs italic py-16 hidden">Adicione sua primeira pesagem para desenhar o gráfico!</p>
@@ -295,9 +303,12 @@
     <script>
         // METAS PADRÃO AJUSTÁVEIS
         let metasMacros = JSON.parse(localStorage.getItem('shape_metas_macros')) || { p: 145, c: 195, g: 65 };
-        let modoMetasAtual = "auto"; // auto ou manual
+        let modoMetasAtual = "auto"; 
+        
+        // --- SISTEMA DE DIETA COM REGISTRO DIÁRIO INDEPENDENTE ---
+        let dataDietaAtual = new Date().toISOString().split('T')[0]; 
+        let estruturaDieta = { refeicoes: [] };
 
-        // BANCO BASE E CONFIG REFEIÇÕES
         const bancoBaseFixo = {
             frango: { nome: "Peito de Frango Grelhado", p: 31, c: 0, g: 2.5 },
             patinho: { nome: "Patinho Moído Cozido", p: 35.9, c: 0, g: 7.3 },
@@ -310,26 +321,74 @@
             whey: { nome: "Whey Protein Concentrado", p: 80, c: 7, g: 6 }
         };
         let bancoCustomizado = JSON.parse(localStorage.getItem('shape_banco_custom')) || {};
-        let estruturaDieta = JSON.parse(localStorage.getItem('shape_dieta_flex_v1')) || {
-            refeicoes: [
-                { id: "ref_1", nome: "Café da Manhã", alimentos: [] },
-                { id: "ref_2", nome: "Almoço", alimentos: [] },
-                { id: "ref_3", nome: "Lanche da Tarde", alimentos: [] }
-            ]
-        };
 
-        // CONTROLE MODAL METAS INTELLIGENT
+        function inicializarFiltroData() {
+            document.getElementById('input-data-dieta').value = dataDietaAtual;
+            carregarDietaDaDataSelecionada();
+        }
+
+        function mudarDataDieta(dias) {
+            let data = new Date(dataDietaAtual + "T12:00:00");
+            data.setDate(data.getDate() + dias);
+            dataDietaAtual = data.toISOString().split('T')[0];
+            document.getElementById('input-data-dieta').value = dataDietaAtual;
+            carregarDietaDaDataSelecionada();
+        }
+
+        function carregarDietaDaDataSelecionada() {
+            dataDietaAtual = document.getElementById('input-data-dieta').value;
+            const hojeStr = new Date().toISOString().split('T')[0];
+            
+            let ontem = new Date(); ontem.setDate(ontem.getDate() - 1);
+            const ontemStr = ontem.toISOString().split('T')[0];
+
+            let amanha = new Date(); amanha.setDate(amanha.getDate() + 1);
+            const amanhaStr = amanha.toISOString().split('T')[0];
+
+            if(dataDietaAtual === hojeStr) document.getElementById('label-data-dieta').innerText = "Hoje";
+            else if(dataDietaAtual === ontemStr) document.getElementById('label-data-dieta').innerText = "Ontem";
+            else if(dataDietaAtual === amanhaStr) document.getElementById('label-data-dieta').innerText = "Amanhã";
+            else {
+                const [ano, mes, dia] = dataDietaAtual.split('-');
+                document.getElementById('label-data-dieta').innerText = `${dia}/${mes}/${ano}`;
+            }
+
+            let dadosSalvos = localStorage.getItem(`shape_dieta_data_${dataDietaAtual}`);
+            if (dadosSalvos) {
+                estruturaDieta = JSON.parse(dadosSalvos);
+            } else {
+                estruturaDieta = {
+                    refeicoes: [
+                        { id: "ref_1", nome: "Café da Manhã", alimentos: [] },
+                        { id: "ref_2", nome: "Almoço", alimentos: [] },
+                        { id: "ref_3", nome: "Lanche da Tarde", alimentos: [] }
+                    ]
+                };
+            }
+            renderizarDietaCompletaUI();
+        }
+
+        // ADICIONA EXCLUSIVAMENTE O ITEM SELECIONADO DO HISTÓRICO
+        function copiarAlimentoDoHistorico(nome, p, c, g, targetId) {
+            const refeicao = estruturaDieta.refeicoes.find(r => r.id === targetId);
+            if (refeicao) {
+                refeicao.alimentos.push({
+                    id_alim: "alim_" + Date.now() + Math.random().toString(36).substr(2, 5),
+                    nome: nome, p: p, c: c, g: g
+                });
+                salvarERenderizarTudo();
+            }
+        }
+
+        // CONTROLADORES DE METAS E CALCULADORA
         function abrirModalMetas() {
-            // Se já existirem pesos salvos, tenta preencher o peso da calculadora automaticamente com o último peso registrado
             let historicoPesos = JSON.parse(localStorage.getItem('shape_peso_objects_v1')) || [];
             if(historicoPesos.length > 0 && !document.getElementById('auto-peso-input').value) {
                 document.getElementById('auto-peso-input').value = historicoPesos[historicoPesos.length - 1].peso;
             }
-            
             document.getElementById('meta-p-input').value = metasMacros.p;
             document.getElementById('meta-c-input').value = metasMacros.c;
             document.getElementById('meta-g-input').value = metasMacros.g;
-            
             calcularMacrosAutomaticos();
             document.getElementById('modal-metas').classList.remove('hidden');
         }
@@ -356,38 +415,21 @@
         function calcularMacrosAutomaticos() {
             const peso = parseFloat(document.getElementById('auto-peso-input').value) || 0;
             const objetivo = document.getElementById('auto-objetivo-select').value;
-            
             let p = 0, c = 0, g = 0;
-
             if(peso > 0) {
-                if(objetivo === 'emagrecer') {
-                    p = Math.round(peso * 2.0);
-                    g = Math.round(peso * 0.8);
-                    c = Math.round(peso * 2.0);
-                } else if(objetivo === 'ganhar') {
-                    p = Math.round(peso * 2.0);
-                    g = Math.round(peso * 1.0);
-                    c = Math.round(peso * 4.0);
-                } else { // manter
-                    p = Math.round(peso * 1.6);
-                    g = Math.round(peso * 0.9);
-                    c = Math.round(peso * 3.0);
-                }
+                if(objetivo === 'emagrecer') { p = Math.round(peso * 2.0); g = Math.round(peso * 0.8); c = Math.round(peso * 2.0); }
+                else if(objetivo === 'ganhar') { p = Math.round(peso * 2.0); g = Math.round(peso * 1.0); c = Math.round(peso * 4.0); }
+                else { p = Math.round(peso * 1.6); g = Math.round(peso * 0.9); c = Math.round(peso * 3.0); }
             }
-
-            document.getElementById('preview-p').innerText = p;
-            document.getElementById('preview-c').innerText = c;
-            document.getElementById('preview-g').innerText = g;
+            document.getElementById('preview-p').innerText = p; document.getElementById('preview-c').innerText = c; document.getElementById('preview-g').innerText = g;
         }
 
         function salvarMetasFinais() {
             let p = 145, c = 195, g = 65;
-
             if(modoMetasAtual === 'auto') {
                 const previewP = parseInt(document.getElementById('preview-p').innerText);
                 const previewC = parseInt(document.getElementById('preview-c').innerText);
                 const previewG = parseInt(document.getElementById('preview-g').innerText);
-                
                 if(previewP <= 0) return alert("Por favor, digite o seu peso para fazer o cálculo!");
                 p = previewP; c = previewC; g = previewG;
             } else {
@@ -395,7 +437,6 @@
                 c = parseInt(document.getElementById('meta-c-input').value) || 195;
                 g = parseInt(document.getElementById('meta-g-input').value) || 65;
             }
-
             metasMacros = { p, c, g };
             localStorage.setItem('shape_metas_macros', JSON.stringify(metasMacros));
             fecharModalMetas();
@@ -414,6 +455,7 @@
         function excluirRefeicao(id) { if (confirm("Excluir refeição?")) { estruturaDieta.refeicoes = estruturaDieta.refeicoes.filter(r => r.id !== id); salvarERenderizarTudo(); } }
         function abrirModalAlimento(idRefeicao, nomeRefeicao) { document.getElementById('modal-target-id').value = idRefeicao; document.getElementById('modal-titulo-ref').innerText = nomeRefeicao; document.getElementById('modal-alimento').classList.remove('hidden'); renderizarListaAlimentosSelect(); }
         function fecharModal() { document.getElementById('modal-alimento').classList.add('hidden'); }
+        
         function selecionarAlimentoBanco() {
             const chave = document.getElementById('alimento-banco').value; if(!chave) return; const todos = { ...bancoBaseFixo, ...bancoCustomizado };
             document.getElementById('add-nome').value = todos[chave].nome; document.getElementById('add-gramas').value = 100; calcularMacrosPorGramas();
@@ -429,18 +471,31 @@
             if (refeicao) { refeicao.alimentos.push({ id_alim: "alim_" + Date.now(), nome: nome, p: p, c: c, g: g }); fecharModal(); salvarERenderizarTudo(); }
         }
         function removerAlimento(idRef, idAlim) { const refeicao = estruturaDieta.refeicoes.find(r => r.id === idRef); if (refeicao) { refeicao.alimentos = refeicao.alimentos.filter(a => a.id_alim !== idAlim); salvarERenderizarTudo(); } }
+        
         function salvarNovoAlimentoNoBanco() {
             const nome = document.getElementById('novo-nome').value.trim(); const p = parseFloat(document.getElementById('novo-p').value) || 0; const c = parseFloat(document.getElementById('novo-c').value) || 0; const g = parseFloat(document.getElementById('novo-g').value) || 0;
             if(!nome) return alert("Digite o nome!"); bancoCustomizado['custom_' + Date.now()] = { nome: nome, p: p, c: c, g: g }; localStorage.setItem('shape_banco_custom', JSON.stringify(bancoCustomizado));
             document.getElementById('novo-nome').value = ''; document.getElementById('novo-p').value = ''; document.getElementById('novo-c').value = ''; document.getElementById('novo-g').value = ''; alert("Alimento adicionado ao banco geral!");
         }
+        
         function salvarERenderizarTudo() {
-            localStorage.setItem('shape_dieta_flex_v1', JSON.stringify(estruturaDieta)); let totalP = 0, totalC = 0, totalG = 0; const container = document.getElementById('container-refeicoes'); container.innerHTML = "";
+            localStorage.setItem(`shape_dieta_data_${dataDietaAtual}`, JSON.stringify(estruturaDieta)); 
+            renderizarDietaCompletaUI();
+        }
+
+        // RENDERIZADOR COM HISTÓRICO VISUAL NÃO-INVASIVO DE HISTÓRICO (ONTEM)
+        function renderizarDietaCompletaUI() {
+            let totalP = 0, totalC = 0, totalG = 0; const container = document.getElementById('container-refeicoes'); container.innerHTML = "";
             
-            // Updates target values on UI
             document.getElementById('p-meta-display').innerText = metasMacros.p;
             document.getElementById('c-meta-display').innerText = metasMacros.c;
             document.getElementById('g-meta-display').innerText = metasMacros.g;
+
+            // Busca os dados de ontem com propósitos de sugestão rápida
+            let dataOntem = new Date(dataDietaAtual + "T12:00:00");
+            dataOntem.setDate(dataOntem.getDate() - 1);
+            const ontemChaveStr = dataOntem.toISOString().split('T')[0];
+            let dadosOntem = JSON.parse(localStorage.getItem(`shape_dieta_data_${ontemChaveStr}`)) || { refeicoes: [] };
 
             estruturaDieta.refeicoes.forEach(ref => {
                 let refP = 0, refC = 0, refG = 0; let alimentosHTML = "";
@@ -448,15 +503,32 @@
                     refP += alim.p; refC += alim.c; refG += alim.g;
                     alimentosHTML += `<div class="flex justify-between items-center bg-gray-900/60 p-2 rounded-lg border border-gray-800/60 text-[11px] mt-1.5"><span class="text-gray-300 font-medium">${alim.nome}</span><div class="flex items-center gap-2"><span class="text-emerald-400">${Math.round(alim.p)}g P</span> | <span class="text-amber-400">${Math.round(alim.c)}g C</span> | <span class="text-blue-400">${Math.round(alim.g)}g G</span><button onclick="removerAlimento('${ref.id}', '${alim.id_alim}')" class="text-red-400 ml-1"><i class="fa-solid fa-trash"></i></button></div></div>`;
                 });
+
+                // Mapeia histórico da refeição correspondente de ontem
+                let refeicaoCorrespondenteOntem = dadosOntem.refeicoes.find(r => r.nome === ref.nome);
+                let historicoHTML = "";
+                
+                if (refeicaoCorrespondenteOntem && refeicaoCorrespondenteOntem.alimentos.length > 0) {
+                    historicoHTML = `<div class="mt-2 pt-2 border-t border-gray-800/40 text-[10px] text-gray-500 font-medium">⏱️ Repetir de ontem nesta refeição:</div><div class="flex flex-wrap gap-1 mt-1">`;
+                    refeicaoCorrespondenteOntem.alimentos.forEach(alimOntem => {
+                        const nomeEscapado = alimOntem.nome.replace(/'/g, "\\'");
+                        historicoHTML += `
+                            <button onclick="copiarAlimentoDoHistorico('${nomeEscapado}', ${alimOntem.p}, ${alimOntem.c}, ${alimOntem.g}, '${ref.id}')" class="bg-gray-900 hover:bg-gray-800 text-[10px] text-gray-400 px-2 py-1 rounded-md border border-gray-800 transition flex items-center gap-1">
+                                + ${alimOntem.nome}
+                            </button>`;
+                    });
+                    historicoHTML += `</div>`;
+                }
+
                 totalP += refP; totalC += refC; totalG += refG;
-                container.innerHTML += `<div class="bg-[#1a1a1e] p-4 rounded-2xl border border-gray-800 shadow-lg space-y-3"><div class="flex justify-between items-center border-b border-gray-800/80 pb-2"><div><h4 class="text-sm font-bold text-gray-200">🍴 ${ref.nome}</h4><div class="text-[10px] text-gray-400 mt-0.5"><span class="text-emerald-400">${Math.round(refP)}g P</span> | <span class="text-amber-400">${Math.round(refC)}g C</span> | <span class="text-blue-400">${Math.round(refG)}g G</span></div></div><div class="flex items-center gap-1"><button onclick="abrirModalAlimento('${ref.id}', '${ref.nome}')" class="bg-gray-800 text-emerald-400 border border-gray-700 text-[11px] font-bold py-1 px-2.5 rounded-lg">+ Add</button><button onclick="excluirRefeicao('${ref.id}')" class="text-gray-500 hover:text-red-400 p-1 text-xs"><i class="fa-solid fa-trash-can"></i></button></div></div><div>${ref.alimentos.length === 0 ? '<p class="text-gray-500 text-[11px] italic py-1">Nenhuma alimento registrado.</p>' : alimentosHTML}</div></div>`;
+                container.innerHTML += `<div class="bg-[#1a1a1e] p-4 rounded-2xl border border-gray-800 shadow-lg space-y-3"><div class="flex justify-between items-center border-b border-gray-800/80 pb-2"><div><h4 class="text-sm font-bold text-gray-200">🍴 ${ref.nome}</h4><div class="text-[10px] text-gray-400 mt-0.5"><span class="text-emerald-400">${Math.round(refP)}g P</span> | <span class="text-amber-400">${Math.round(refC)}g C</span> | <span class="text-blue-400">${Math.round(refG)}g G</span></div></div><div class="flex items-center gap-1"><button onclick="abrirModalAlimento('${ref.id}', '${ref.nome}')" class="bg-gray-800 text-emerald-400 border border-gray-700 text-[11px] font-bold py-1 px-2.5 rounded-lg">+ Add</button><button onclick="excluirRefeicao('${ref.id}')" class="text-gray-500 hover:text-red-400 p-1 text-xs"><i class="fa-solid fa-trash-can"></i></button></div></div><div>${ref.alimentos.length === 0 ? '<p class="text-gray-500 text-[11px] italic py-1">Nenhum alimento registrado para hoje.</p>' : alimentosHTML}</div>${historicoHTML}</div>`;
             });
             
             document.getElementById('p-atual').innerText = Math.round(totalP); document.getElementById('c-atual').innerText = Math.round(totalC); document.getElementById('g-atual').innerText = Math.round(totalG);
             document.getElementById('p-bar').style.width = `${Math.min((totalP / metasMacros.p) * 100, 100)}%`; document.getElementById('c-bar').style.width = `${Math.min((totalC / metasMacros.c) * 100, 100)}%`; document.getElementById('g-bar').style.width = `${Math.min((totalG / metasMacros.g) * 100, 100)}%`;
         }
 
-        // ================= SISTEMA DE FICHAS DE TREINOS EDITÁVEIS =================
+        // FICHAS DE TREINOS EDITÁVEIS
         const treinosExemplo = {
             A: [{ id: "ex_1", nome: "Exemplo: Supino Inclinado", series: "4x 10" }],
             B: [{ id: "ex_2", nome: "Exemplo: Puxada Alta", series: "4x 10" }],
@@ -534,7 +606,7 @@
         }
         function removerItemDiario(id) { if (confirm("Remover do diário?")) { historicoTreinosLog = historicoTreinosLog.filter(l => l.id !== id); localStorage.setItem('shape_diario_treinos', JSON.stringify(historicoTreinosLog)); renderizarDiarioTreinos(); } }
 
-        // ================= ABA 3: EVOLUÇÃO =================
+        // ABA 3: EVOLUÇÃO DE PESO E GRÁFICOS
         let historicoPesoObjetos = JSON.parse(localStorage.getItem('shape_peso_objects_v1')) || [];
         let graficoInstancia = null;
 
@@ -544,23 +616,15 @@
         }
 
         function adicionarPeso() {
-            const inputPeso = document.getElementById('novo-peso');
-            const inputData = document.getElementById('data-peso');
-            const peso = parseFloat(inputPeso.value);
-            const data = inputData.value;
+            const inputPeso = document.getElementById('novo-peso'); const inputData = document.getElementById('data-peso');
+            const peso = parseFloat(inputPeso.value); const data = inputData.value;
+            if (!peso || peso <= 0) return alert("Por favor, digite um peso válido!"); if (!data) return alert("Por favor, selecione uma data válida!");
 
-            if (!peso || peso <= 0) return alert("Por favor, digite um peso válido!");
-            if (!data) return alert("Por favor, selecione uma data válida!");
-
-            const novoRegistro = { id: Date.now(), peso: peso, data: data };
-            historicoPesoObjetos.push(novoRegistro);
+            historicoPesoObjetos.push({ id: Date.now(), peso: peso, data: data });
             historicoPesoObjetos.sort((a, b) => new Date(a.data) - new Date(b.data));
             localStorage.setItem('shape_peso_objects_v1', JSON.stringify(historicoPesoObjetos));
             
-            inputPeso.value = '';
-            definirDataAtualInput();
-            renderizarGrafico();
-            renderizarHistoricoGerenciávelPesos();
+            inputPeso.value = ''; definirDataAtualInput(); renderizarGrafico(); renderizarHistoricoGerenciávelPesos();
         }
 
         function editarRegistroPeso(id) {
@@ -576,41 +640,24 @@
             registro.peso = novoPeso; registro.data = novaDataPrompt;
             historicoPesoObjetos.sort((a, b) => new Date(a.data) - new Date(b.data));
             localStorage.setItem('shape_peso_objects_v1', JSON.stringify(historicoPesoObjetos));
-
-            renderizarGrafico();
-            renderizarHistoricoGerenciávelPesos();
+            renderizarGrafico(); renderizarHistoricoGerenciávelPesos();
         }
 
         function deletarRegistroPeso(id) {
             if (confirm("Deseja realmente excluir permanentemente este registro de peso?")) {
                 historicoPesoObjetos = historicoPesoObjetos.filter(p => p.id !== id);
                 localStorage.setItem('shape_peso_objects_v1', JSON.stringify(historicoPesoObjetos));
-                renderizarGrafico();
-                renderizarHistoricoGerenciávelPesos();
+                renderizarGrafico(); renderizarHistoricoGerenciávelPesos();
             }
         }
 
         function renderizarHistoricoGerenciávelPesos() {
             const container = document.getElementById('lista-pesos-historico'); container.innerHTML = '';
             if (historicoPesoObjetos.length === 0) { container.innerHTML = '<p class="text-gray-500 text-center py-4 italic">Nenhum peso registrado ainda.</p>'; return; }
-
             const exibicaoInvertida = [...historicoPesoObjetos].reverse();
             exibicaoInvertida.forEach(reg => {
                 const [ano, mes, dia] = reg.data.split('-');
-                container.innerHTML += `
-                    <div class="bg-gray-900 p-2.5 rounded-xl border border-gray-800 flex justify-between items-center">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-weight-scale text-emerald-400"></i>
-                            <div>
-                                <span class="font-bold text-gray-200">${reg.peso.toFixed(1)} kg</span>
-                                <span class="text-[10px] text-gray-400 block"><i class="fa-regular fa-calendar"></i> ${dia}/${mes}/${ano}</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <button onclick="editarRegistroPeso(${reg.id})" class="text-gray-400 hover:text-amber-400 p-1 text-xs"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="deletarRegistroPeso(${reg.id})" class="text-gray-500 hover:text-red-400 p-1 text-xs"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
-                    </div>`;
+                container.innerHTML += `<div class="bg-gray-900 p-2.5 rounded-xl border border-gray-800 flex justify-between items-center"><div class="flex items-center gap-2"><i class="fa-solid fa-weight-scale text-emerald-400"></i><div><span class="font-bold text-gray-200">${reg.peso.toFixed(1)} kg</span><span class="text-[10px] text-gray-400 block"><i class="fa-regular fa-calendar"></i> ${dia}/${mes}/${ano}</span></div></div><div class="flex items-center gap-1.5"><button onclick="editarRegistroPeso(${reg.id})" class="text-gray-400 hover:text-amber-400 p-1 text-xs"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deletarRegistroPeso(${reg.id})" class="text-gray-500 hover:text-red-400 p-1 text-xs"><i class="fa-solid fa-trash-can"></i></button></div></div>`;
             });
         }
 
@@ -643,7 +690,7 @@
             });
         }
 
-        // TIMER & AUXILIARES NAVIGATION
+        // CONTROLADORES INTERNOS (TIMER / ABAS)
         let timerIntervalo;
         function iniciarDescanso() {
             clearInterval(timerIntervalo); const display = document.getElementById('timer-display'); const contagem = document.getElementById('timer-count');
@@ -658,11 +705,12 @@
             if (abaNome === 'evolucao') { renderizarGrafico(); renderizarHistoricoGerenciávelPesos(); }
         }
 
-        // Inicialização Global
-        salvarERenderizarTudo();
-        mudarTreino();
-        renderizarDiarioTreinos();
-        definirDataAtualInput();
+        window.onload = function() {
+            inicializarFiltroData();
+            mudarTreino();
+            renderizarDiarioTreinos();
+            definirDataAtualInput();
+        };
     </script>
 </body>
 </html>
